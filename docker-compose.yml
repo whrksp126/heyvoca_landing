@@ -1,0 +1,13 @@
+services:
+  landing:
+    build: .
+    container_name: heyvoca_landing
+    image: whrksp126/heyvoca_landing:prod
+    restart: always
+    networks:
+      - nginx_proxy
+
+networks:
+  nginx_proxy:
+    external: true
+    name: nginx_proxy

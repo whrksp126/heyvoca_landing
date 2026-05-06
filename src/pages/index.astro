@@ -1,0 +1,22 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import Features from '../components/Features.astro';
+import DownloadCTA from '../components/DownloadCTA.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<BaseLayout
+  title="헤이보카 (Hey, Voca!)"
+  description="망각 직전 다시 만나는 단어. SM2 알고리즘과 6가지 업적 시스템으로 영어 단어를 즐겁게 외우는 학습 앱 헤이보카(Hey, Voca!)."
+  path="/"
+>
+  <Header />
+  <main>
+    <Hero />
+    <Features />
+    <DownloadCTA />
+  </main>
+  <Footer />
+</BaseLayout>

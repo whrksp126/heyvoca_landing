@@ -1,0 +1,34 @@
+---
+const navItems = [
+  { href: '/#features', label: '특장점' },
+  { href: '/#download', label: '다운로드' },
+  { href: '/privacy-policy', label: '개인정보' },
+  { href: '/terms-of-service', label: '약관' },
+];
+---
+
+<header class="sticky top-0 z-40 w-full border-b border-ink-100/70 bg-white/80 backdrop-blur">
+  <div class="container-content flex h-[60px] items-center justify-between">
+    <a href="/" class="flex items-center gap-2" aria-label="헤이보카 홈">
+      <img src="/images/logo_h.png" alt="헤이보카 로고" width="32" height="32" class="h-8 w-8" />
+      <span class="text-lg font-extrabold tracking-tight text-ink-900">
+        Hey, <span class="text-primary-600">Voca!</span>
+      </span>
+    </a>
+
+    <nav class="hidden items-center gap-7 md:flex" aria-label="메인 메뉴">
+      {navItems.map((item) => (
+        <a
+          href={item.href}
+          class="text-sm font-medium text-ink-700 transition hover:text-primary-600"
+        >
+          {item.label}
+        </a>
+      ))}
+    </nav>
+
+    <a href="/#download" class="btn-primary !px-5 !py-2 text-sm">
+      앱 다운로드
+    </a>
+  </div>
+</header>

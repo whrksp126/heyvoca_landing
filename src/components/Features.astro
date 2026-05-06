@@ -1,0 +1,73 @@
+---
+const features = [
+  {
+    icon: '🧠',
+    title: 'SM2 알고리즘 자동 복습',
+    desc: '망각 곡선에 맞춰 가장 효과적인 시점에 단어를 다시 보여드려요. 외운 단어가 머리 속에 오래 남도록.',
+    accent: 'from-[#FFEEFA] to-white',
+    border: 'border-primary-200',
+  },
+  {
+    icon: '👑',
+    title: '6가지 분야의 "왕" 업적',
+    desc: '출석 · 일일미션 · 암기 · 끈기 · 노력 · 독서. 학습 과정의 모든 순간이 보상으로 돌아옵니다.',
+    accent: 'from-[#FFF8E5] to-white',
+    border: 'border-[#FDDCAB]',
+  },
+  {
+    icon: '💎',
+    title: '보석으로 단어장 서점',
+    desc: '큐레이션된 단어장을 보석으로 구매해 학습. TOEIC, 회화, 카테고리별로 골라 담아 공부할 수 있어요.',
+    accent: 'from-[#F4F3FF] to-white',
+    border: 'border-[#D9D6FE]',
+  },
+  {
+    icon: '🔐',
+    title: '간편 소셜 로그인',
+    desc: 'Google · Apple 계정으로 1초 가입. 비밀번호 없이 안전하게, 가입 부담 제로.',
+    accent: 'from-[#EFF8FF] to-white',
+    border: 'border-[#B2DDFF]',
+  },
+  {
+    icon: '📱',
+    title: 'iOS · Android 동시 지원',
+    desc: '아이폰에서 외운 단어를 안드로이드에서도 그대로. 어떤 기기에서든 끊김 없이 이어집니다.',
+    accent: 'from-[#E8FDFB] to-white',
+    border: 'border-[#97F4ED]',
+  },
+  {
+    icon: '🔔',
+    title: '학습 리마인더 푸시',
+    desc: '복습할 단어가 쌓이면 알아서 알려드려요. 학습 루틴을 흐트러뜨리지 않게 살짝 챙겨주는 알림.',
+    accent: 'from-[#FFEAD5] to-white',
+    border: 'border-[#FEB273]',
+  },
+];
+---
+
+<section id="features" class="scroll-mt-24 py-20 md:py-28">
+  <div class="container-content">
+    <div class="mx-auto max-w-2xl text-center">
+      <p class="text-sm font-semibold uppercase tracking-wider text-primary-600">Features</p>
+      <h2 class="mt-3 text-3xl font-extrabold leading-tight text-ink-900 md:text-4xl">
+        외우는 게 아니라,<br />
+        <span class="text-primary-600">기억에 남는</span> 학습이에요.
+      </h2>
+      <p class="mt-4 text-base leading-relaxed text-ink-700">
+        헤이보카는 인지과학 기반 학습법과 게임의 즐거움을 하나로 묶었습니다.
+      </p>
+    </div>
+
+    <ul class="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {features.map((f) => (
+        <li
+          class={`group rounded-3xl border ${f.border} bg-gradient-to-br ${f.accent} p-7 transition hover:-translate-y-1 hover:shadow-lg`}
+        >
+          <div class="text-3xl" aria-hidden="true">{f.icon}</div>
+          <h3 class="mt-4 text-lg font-bold text-ink-900">{f.title}</h3>
+          <p class="mt-2 text-sm leading-relaxed text-ink-700">{f.desc}</p>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>

@@ -1,0 +1,90 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  path?: string;
+  ogImage?: string;
+  noIndex?: boolean;
+}
+
+const {
+  title,
+  description = '망각 직전 다시 만나는 단어. SM2 알고리즘과 게임 같은 업적 시스템으로 영어 단어를 즐겁게 외우는 학습 앱 헤이보카(Hey, Voca!).',
+  path = '/',
+  ogImage = '/og-image.png',
+  noIndex = false,
+} = Astro.props;
+
+const SITE_URL = 'https://heyvoca.ghmate.com';
+const canonical = new URL(path, SITE_URL).toString();
+const ogImageUrl = new URL(ogImage, SITE_URL).toString();
+const fullTitle = title === '헤이보카 (Hey, Voca!)' ? title : `${title} | 헤이보카 (Hey, Voca!)`;
+
+const orgJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: '슬기로운 사업',
+  url: SITE_URL,
+  email: 'ceo@ghmate.com',
+  founder: { '@type': 'Person', name: '조건호' },
+  address: {
+    '@type': 'PostalAddress',
+    addressCountry: 'KR',
+    addressLocality: '부산광역시 부산진구',
+    streetAddress: '동천로 116, 3층 오픈오피스 12호',
+  },
+};
+
+const appJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'MobileApplication',
+  name: '헤이보카',
+  alternateName: 'Hey, Voca!',
+  operatingSystem: 'iOS, Android',
+  applicationCategory: 'EducationalApplication',
+  description,
+  url: SITE_URL,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'KRW' },
+  publisher: { '@type': 'Organization', name: '슬기로운 사업' },
+};
+---
+
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#FF70D4" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="format-detection" content="telephone=no" />
+
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noIndex && <meta name="robots" content="noindex,nofollow" />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="헤이보카 (Hey, Voca!)" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:locale" content="ko_KR" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+
+    <link rel="icon" type="image/png" href="/images/logo_h.png" />
+    <link rel="apple-touch-icon" href="/images/logo_h.png" />
+
+    <script type="application/ld+json" set:html={JSON.stringify(orgJsonLd)}></script>
+    <script type="application/ld+json" set:html={JSON.stringify(appJsonLd)}></script>
+  </head>
+  <body class="min-h-screen bg-white">
+    <slot />
+  </body>
+</html>

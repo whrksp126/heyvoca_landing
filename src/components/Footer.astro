@@ -1,0 +1,44 @@
+---
+const year = new Date().getFullYear();
+---
+
+<footer class="mt-32 border-t border-ink-100 bg-ink-100/40">
+  <div class="container-content py-12">
+    <div class="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr]">
+      <div>
+        <a href="/" class="flex items-center gap-2" aria-label="헤이보카 홈">
+          <img src="/images/logo_h.png" alt="헤이보카 로고" width="32" height="32" class="h-8 w-8" />
+          <span class="text-lg font-extrabold text-ink-900">
+            Hey, <span class="text-primary-600">Voca!</span>
+          </span>
+        </a>
+        <p class="mt-3 max-w-md text-sm leading-relaxed text-ink-700">
+          망각 직전 다시 만나는 단어. 게임처럼 즐거운 영어 단어 학습 앱 헤이보카.
+        </p>
+      </div>
+
+      <nav aria-label="법적 고지" class="text-sm">
+        <h2 class="mb-3 font-semibold text-ink-900">법적 고지</h2>
+        <ul class="space-y-2">
+          <li><a href="/privacy-policy" class="text-ink-700 hover:text-primary-600">개인정보처리방침</a></li>
+          <li><a href="/terms-of-service" class="text-ink-700 hover:text-primary-600">서비스 이용약관</a></li>
+        </ul>
+      </nav>
+
+      <div class="text-sm leading-relaxed text-ink-700">
+        <h2 class="mb-3 font-semibold text-ink-900">사업자 정보</h2>
+        <dl class="space-y-1.5">
+          <div class="flex gap-2"><dt class="shrink-0 text-ink-500">상호</dt><dd>슬기로운 사업</dd></div>
+          <div class="flex gap-2"><dt class="shrink-0 text-ink-500">대표</dt><dd>조건호</dd></div>
+          <div class="flex gap-2"><dt class="shrink-0 text-ink-500">사업자등록번호</dt><dd>315-27-01645</dd></div>
+          <div class="flex gap-2"><dt class="shrink-0 text-ink-500">이메일</dt><dd><a href="mailto:ceo@ghmate.com" class="hover:text-primary-600">ceo@ghmate.com</a></dd></div>
+          <div class="flex gap-2"><dt class="shrink-0 text-ink-500">주소</dt><dd>부산광역시 부산진구 동천로 116, 3층 오픈오피스 12호</dd></div>
+        </dl>
+      </div>
+    </div>
+
+    <p class="mt-10 border-t border-ink-200 pt-6 text-xs text-ink-500">
+      © {year} 슬기로운 사업. All rights reserved.
+    </p>
+  </div>
+</footer>
