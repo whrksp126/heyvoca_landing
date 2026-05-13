@@ -3,12 +3,43 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Circle, X, SpeakerHigh, HandsClapping } from '@phosphor-icons/react';
+import { Circle, X, SpeakerHigh, HandsClapping, Leaf, Plant, Carrot, EggCrack } from '@phosphor-icons/react';
 import { buildTestQuestions, type TestQuestion, type Option as QOption } from '../../data/testQuestions';
 import type { DemoWord, MemoryStatus } from '../../data/demoWords';
 import { demoWords, nextStatusOnGood, nextStatusOnBad } from '../../data/demoWords';
 import MemorizationStatus from './MemorizationStatus';
 import { getTextSound, stopCurrentSound } from '../../utils/tts';
+
+// 실서비스 stateNameMap + 색상 (MemorizationStatus와 동일)
+const STATE_NAME: Record<MemoryStatus, string> = {
+  unlearned: '미학습',
+  leaf: '단기 암기',
+  plant: '중기 암기',
+  carrot: '장기 암기',
+  overdue: '복습 지연',
+};
+
+const STATE_COLOR: Record<MemoryStatus, { border: string; text: string; bg: string; icon: React.ReactNode }> = {
+  unlearned: { border: '#9D835A', text: '#9D835A', bg: '#FFFCF3', icon: <EggCrack size={10} weight="fill" /> },
+  leaf: { border: '#77CE4F', text: '#77CE4F', bg: '#F2FFEB', icon: <Leaf size={10} weight="fill" /> },
+  plant: { border: '#38CE38', text: '#38CE38', bg: '#EBFFEE', icon: <Plant size={10} weight="fill" /> },
+  carrot: { border: '#F68300', text: '#F68300', bg: '#FFF8E8', icon: <Carrot size={10} weight="fill" /> },
+  overdue: { border: '#F26A6A', text: '#F26A6A', bg: '#FFE9E9', icon: <Leaf size={10} weight="fill" /> },
+};
+
+// 단계별 정답 시 권장 복습 간격(일) — 실서비스 FSRS 추정 유사
+const NEXT_REVIEW_DAYS_BY_STATE: Record<MemoryStatus, number> = {
+  unlearned: 1,
+  leaf: 3,
+  plant: 14,
+  carrot: 60,
+  overdue: 1,
+};
+
+interface MemoryStateChange {
+  from: MemoryStatus;
+  to: MemoryStatus;
+}
 
 // ──────────────────────────────────────────────────────────────────
 // 유틸
@@ -113,6 +144,43 @@ interface MCProps {
   onSelect: (i: number) => void;
   onSpeak: () => void;
   isSpeaking: boolean;
+  memoryStateChange: MemoryStateChange | null;
+  nextReviewDays: number | null;
+}
+
+function MemoryStateChangeBadge({ change }: { change: MemoryStateChange }) {
+  const c = STATE_COLOR[change.to];
+  return (
+    <motion.div
+      className="flex items-center gap-[3px] overflow-hidden whitespace-nowrap rounded-[50px] border px-[8px] py-[3px] text-[10px] font-semibold"
+      style={{ color: c.text, borderColor: c.border, backgroundColor: c.bg }}
+      initial={{ maxWidth: 28 }}
+      animate={{ maxWidth: 300 }}
+      transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
+    >
+      <span className="shrink-0">{c.icon}</span>
+      <motion.span
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2, duration: 0.25 }}
+      >
+        암기 상태가 {STATE_NAME[change.to]}로 변경되었어요!
+      </motion.span>
+    </motion.div>
+  );
+}
+
+function NextReviewBadge({ days }: { days: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+      className="flex h-[18px] items-center justify-center whitespace-nowrap rounded-[3px] bg-primary-100 px-[6px] text-[10px] font-semibold text-primary-600"
+    >
+      {days}일 후 복습 예정
+    </motion.div>
+  );
 }
 
 function MultipleChoiceCard({
@@ -124,6 +192,8 @@ function MultipleChoiceCard({
   onSelect,
   onSpeak,
   isSpeaking,
+  memoryStateChange,
+  nextReviewDays,
 }: MCProps) {
   const isListening = question.questionType === 'multipleChoiceListening';
   return (
@@ -134,6 +204,19 @@ function MultipleChoiceCard({
         whileTap={{ scale: 0.97 }}
         className="relative flex flex-1 cursor-pointer items-center justify-center rounded-[12px] bg-[#F5F5F5]"
       >
+        {/* 상단 중앙 — 채점 후 암기 상태 변경 뱃지 */}
+        {isAnswered && memoryStateChange && (
+          <div className="absolute left-1/2 top-[15px] z-[2] -translate-x-1/2">
+            <MemoryStateChangeBadge change={memoryStateChange} />
+          </div>
+        )}
+        {/* 하단 중앙 — 채점 후 복습 예정일 뱃지 */}
+        {isAnswered && nextReviewDays != null && !memoryStateChange && (
+          <div className="absolute bottom-[15px] left-1/2 z-[2] -translate-x-1/2">
+            <NextReviewBadge days={nextReviewDays} />
+          </div>
+        )}
+
         {isListening && !isAnswered ? (
           <div className="relative flex items-center justify-center">
             {isSpeaking && (
@@ -192,14 +275,28 @@ interface FillProps {
   isCorrect: boolean | null;
   isAnswered: boolean;
   onSelect: (i: number) => void;
+  memoryStateChange: MemoryStateChange | null;
+  nextReviewDays: number | null;
 }
 
-function FillBlankCard({ question, userSelected, isCorrect, isAnswered, onSelect }: FillProps) {
+function FillBlankCard({ question, userSelected, isCorrect, isAnswered, onSelect, memoryStateChange, nextReviewDays }: FillProps) {
   const word = question.word!;
   const blanked = replaceWordWithBlank(word.example.en, word.word);
   return (
     <div className="flex h-full flex-col gap-[15px]">
       <div className="relative flex flex-1 flex-col items-center justify-center gap-[12px] rounded-[12px] bg-[#F5F5F5] px-[20px] py-[24px] text-center">
+        {/* 상단 중앙 — 채점 후 암기 상태 변경 뱃지 */}
+        {isAnswered && memoryStateChange && (
+          <div className="absolute left-1/2 top-[15px] z-[2] -translate-x-1/2">
+            <MemoryStateChangeBadge change={memoryStateChange} />
+          </div>
+        )}
+        {/* 하단 중앙 — 채점 후 복습 예정일 뱃지 */}
+        {isAnswered && nextReviewDays != null && !memoryStateChange && (
+          <div className="absolute bottom-[15px] left-1/2 z-[2] -translate-x-1/2">
+            <NextReviewBadge days={nextReviewDays} />
+          </div>
+        )}
         <p className="text-[12px] font-bold uppercase tracking-wider text-mute">빈칸에 들어갈 단어는?</p>
         <p className="text-[18px] font-semibold text-ink leading-[1.5]">
           {blanked.split('_____').map((part, i, arr) => (
@@ -455,6 +552,8 @@ export default function TestPlayDemo({
   const [isAnswered, setIsAnswered] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
+  const [memoryStateChange, setMemoryStateChange] = useState<MemoryStateChange | null>(null);
+  const [nextReviewDays, setNextReviewDays] = useState<number | null>(null);
 
   // 단어별 상태 추적 (시작 시점 vs 현재) — 우측 사이드 패널용
   const initialStatus = useMemo<Record<number, MemoryStatus>>(() => {
@@ -483,12 +582,13 @@ export default function TestPlayDemo({
     });
   }, [progressIndex, totalQuestions, statusByWord, questions, onMetricsChange]);
 
-  // 자동 TTS — multipleChoiceListening 진입 시
+  // 자동 TTS — 슬라이드 진입 시 단어 자동 재생 (cardMatch/fillInTheBlank 제외, 실서비스 동일)
   useEffect(() => {
     if (!cur || isFinished) return;
     stopCurrentSound();
     setIsSpeaking(false);
-    if (cur.questionType === 'multipleChoiceListening' && cur.word) {
+    const autoSpeakTypes = ['multipleChoice', 'multipleChoiceListening'];
+    if (autoSpeakTypes.includes(cur.questionType) && cur.word) {
       setIsSpeaking(true);
       getTextSound(cur.word.word, 'en').finally(() => setIsSpeaking(false));
     }
@@ -509,6 +609,8 @@ export default function TestPlayDemo({
     setIsCorrect(null);
     setIsAnswered(false);
     setIsSpeaking(false);
+    setMemoryStateChange(null);
+    setNextReviewDays(null);
     if (progressIndex < totalQuestions - 1) {
       setProgressIndex((i) => i + 1);
     } else {
@@ -529,15 +631,29 @@ export default function TestPlayDemo({
       next[idx] = { ...next[idx], userResultIndex: i, isCorrect: correct };
       return next;
     });
-    // 단어 단계 진화
+    // 단어 단계 진화 + 채점 인터랙션 (암기 상태 변경 뱃지 / 복습 예정일)
     const wordId = cur.word?.id;
     if (wordId != null) {
-      setStatusByWord((prev) => ({
-        ...prev,
-        [wordId]: correct ? nextStatusOnGood(prev[wordId] ?? 'unlearned') : nextStatusOnBad(prev[wordId] ?? 'unlearned'),
-      }));
+      setStatusByWord((prev) => {
+        const prevState = prev[wordId] ?? 'unlearned';
+        const newState = correct ? nextStatusOnGood(prevState) : nextStatusOnBad(prevState);
+        // 상태 변화 알림: 단계가 바뀌었을 때만 뱃지 표시
+        if (prevState !== newState) {
+          setMemoryStateChange({ from: prevState, to: newState });
+          setNextReviewDays(null);
+        } else if (correct) {
+          // 단계 변화 없음 + 정답 → 복습 예정일만 표시
+          setMemoryStateChange(null);
+          setNextReviewDays(NEXT_REVIEW_DAYS_BY_STATE[newState] ?? 3);
+        } else {
+          setMemoryStateChange(null);
+          setNextReviewDays(null);
+        }
+        return { ...prev, [wordId]: newState };
+      });
     }
-    setTimeout(advanceToNext, correct ? 900 : 1300);
+    // 정답: 채점 인터랙션 보여주는 시간 확보 (1.6초), 오답: 좀 더 긴 1.8초
+    setTimeout(advanceToNext, correct ? 1600 : 1800);
   };
 
   // cardMatch 완료 처리
@@ -599,16 +715,8 @@ export default function TestPlayDemo({
             <span>●●●●</span>
           </div>
 
-          {/* 헤더 */}
-          <div className="flex items-center justify-between px-[20px] pt-6">
-            <span className="text-[14px] font-semibold text-ink">AI 추천 테스트</span>
-            <span className="text-[12px] font-semibold text-mute">
-              {isFinished ? '완료' : `${progressIndex + 1} / ${totalQuestions}`}
-            </span>
-          </div>
-
           {/* 프로그레스 바 — 실서비스: h-[16px] mb-[15px] rounded-[50px] */}
-          <div className="px-[16px] pt-[5px]">
+          <div className="px-[16px] pt-6">
             <motion.div className="relative mb-[15px] h-[16px] w-full overflow-hidden rounded-[50px] bg-primary-100">
               <motion.div
                 className="h-full rounded-[50px] bg-primary-500"
@@ -655,6 +763,8 @@ export default function TestPlayDemo({
                       onSelect={handleSelect}
                       onSpeak={handleSpeak}
                       isSpeaking={isSpeaking}
+                      memoryStateChange={memoryStateChange}
+                      nextReviewDays={nextReviewDays}
                     />
                   )}
                   {cur.questionType === 'fillInTheBlank' && (
@@ -664,6 +774,8 @@ export default function TestPlayDemo({
                       isCorrect={isCorrect}
                       isAnswered={isAnswered}
                       onSelect={handleSelect}
+                      memoryStateChange={memoryStateChange}
+                      nextReviewDays={nextReviewDays}
                     />
                   )}
                   {(cur.questionType === 'cardMatch' || cur.questionType === 'cardMatchListening') && (

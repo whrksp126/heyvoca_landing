@@ -10,7 +10,13 @@ import {
 import MemorizationStatus from './MemorizationStatus';
 import { getTextSound, stopCurrentSound } from '../../utils/tts';
 
-const AUTO_ADVANCE_MS = 5500;
+// 자동 재생 시 한 단어 학습 완료 후 다음 카드로 전환하는 간격 (실서비스: 350ms)
+const NEXT_CARD_DELAY_MS = 350;
+
+interface RevealFlags {
+  meanings: boolean;
+  example: boolean;
+}
 
 function HiddenPlaceholder({ label, onReveal, small = false }: { label: string; onReveal: () => void; small?: boolean }) {
   return (
@@ -28,7 +34,7 @@ function HiddenPlaceholder({ label, onReveal, small = false }: { label: string; 
 
 interface CardFaceProps {
   word: DemoWord;
-  revealedFlags: { meanings: boolean; example: boolean };
+  revealedFlags: RevealFlags;
   onReveal: (key: 'meanings' | 'example') => void;
   onSpeak: (key: string, text: string, lang?: 'en' | 'ko') => void;
   speakingItem: string | null;
@@ -38,7 +44,6 @@ interface CardFaceProps {
 function CardFace({ word, revealedFlags, onReveal, onSpeak, speakingItem, status }: CardFaceProps) {
   return (
     <div className="flex flex-col gap-[25px] p-[20px]">
-      {/* 상단: 암기 상태 뱃지 + 단어 + 의미 */}
       <div className="flex flex-col gap-[12px]">
         <div>
           <div className="mb-[5px]">
@@ -74,28 +79,28 @@ function CardFace({ word, revealedFlags, onReveal, onSpeak, speakingItem, status
           <p className="mt-[2px] text-[13px] font-normal text-sub">{word.ipa}</p>
         </div>
 
-        {/* 의미 — 실서비스: text-[13px] font-[400] 각 줄 + 우측 스피커 */}
+        {/* 의미 */}
         {revealedFlags.meanings ? (
           <div className="flex flex-col gap-[4px]">
             {word.meanings.map((m, i) => (
               <div key={i} className="flex items-center justify-between gap-[8px]">
                 <span
                   className={`flex-1 text-[13px] font-normal leading-[16px] ${
-                    speakingItem === `meaning-${i}` ? 'text-primary-500' : 'text-sub'
+                    speakingItem === 'meanings' ? 'text-primary-500' : 'text-sub'
                   }`}
                 >
                   {m}
                 </span>
                 <motion.button
                   type="button"
-                  onClick={() => onSpeak(`meaning-${i}`, m, 'ko')}
+                  onClick={() => onSpeak('meanings', m, 'ko')}
                   aria-label={`${m} 듣기`}
                   whileTap={{ scale: 0.85 }}
                 >
                   <SpeakerHigh
                     weight="fill"
                     size={16}
-                    color={speakingItem === `meaning-${i}` ? '#FF70D4' : '#C5C5C5'}
+                    color={speakingItem === 'meanings' ? '#FF70D4' : '#C5C5C5'}
                     aria-hidden
                   />
                 </motion.button>
@@ -116,14 +121,14 @@ function CardFace({ word, revealedFlags, onReveal, onSpeak, speakingItem, status
             <div className="flex items-start justify-between gap-[5px]">
               <span
                 className={`flex-1 text-[14px] font-normal ${
-                  speakingItem === 'example-en' ? 'text-primary-500' : 'text-ink'
+                  speakingItem === 'exampleSentences' ? 'text-primary-500' : 'text-ink'
                 }`}
               >
                 {word.example.en}
               </span>
               <motion.button
                 type="button"
-                onClick={() => onSpeak('example-en', word.example.en, 'en')}
+                onClick={() => onSpeak('exampleSentences', word.example.en, 'en')}
                 aria-label="예문 발음 듣기"
                 className="mt-[2px] shrink-0"
                 whileTap={{ scale: 0.85 }}
@@ -131,7 +136,7 @@ function CardFace({ word, revealedFlags, onReveal, onSpeak, speakingItem, status
                 <SpeakerHigh
                   weight="fill"
                   size={16}
-                  color={speakingItem === 'example-en' ? '#FF70D4' : '#C5C5C5'}
+                  color={speakingItem === 'exampleSentences' ? '#FF70D4' : '#C5C5C5'}
                   aria-hidden
                 />
               </motion.button>
@@ -140,14 +145,14 @@ function CardFace({ word, revealedFlags, onReveal, onSpeak, speakingItem, status
             <div className="flex items-start justify-between gap-[8px]">
               <span
                 className={`flex-1 text-[13px] font-normal ${
-                  speakingItem === 'example-ko' ? 'text-primary-500' : 'text-[#7B7B7B]'
+                  speakingItem === 'exampleMeanings' ? 'text-primary-500' : 'text-[#7B7B7B]'
                 }`}
               >
                 {word.example.ko}
               </span>
               <motion.button
                 type="button"
-                onClick={() => onSpeak('example-ko', word.example.ko, 'ko')}
+                onClick={() => onSpeak('exampleMeanings', word.example.ko, 'ko')}
                 aria-label="예문 한글 듣기"
                 className="mt-[2px] shrink-0"
                 whileTap={{ scale: 0.85 }}
@@ -155,7 +160,7 @@ function CardFace({ word, revealedFlags, onReveal, onSpeak, speakingItem, status
                 <SpeakerHigh
                   weight="fill"
                   size={16}
-                  color={speakingItem === 'example-ko' ? '#FF70D4' : '#C5C5C5'}
+                  color={speakingItem === 'exampleMeanings' ? '#FF70D4' : '#C5C5C5'}
                   aria-hidden
                 />
               </motion.button>
@@ -200,7 +205,7 @@ export default function StudyCardDemo({
   onMetricsChange?: (m: StudyCardMetrics) => void;
 }) {
   const [index, setIndex] = useState(0);
-  const [revealMap, setRevealMap] = useState<Record<number, { meanings: boolean; example: boolean }>>({});
+  const [revealMap, setRevealMap] = useState<Record<number, RevealFlags>>({});
   const [doneSet, setDoneSet] = useState<Set<number>>(new Set());
   const [isPlaying, setIsPlaying] = useState(true);
   const [hasEntered, setHasEntered] = useState(false);
@@ -219,6 +224,14 @@ export default function StudyCardDemo({
   const currentStatus = statusMap[index] ?? word.status;
   const revealedFlags = revealMap[index] ?? { meanings: false, example: false };
 
+  // Playback refs — 클로저에서 최신 값 안전하게 접근
+  const indexRef = useRef(index);
+  const playbackCancelRef = useRef(false);
+  const nextCardTimerRef = useRef<number | null>(null);
+  useEffect(() => {
+    indexRef.current = index;
+  }, [index]);
+
   // 스크롤 진입 감지 → 자동 재생 시작
   useEffect(() => {
     if (!rootRef.current) return;
@@ -231,7 +244,7 @@ export default function StudyCardDemo({
           }
         });
       },
-      { threshold: 0.4 },
+      { threshold: 0.3 },
     );
     obs.observe(rootRef.current);
     return () => obs.disconnect();
@@ -255,25 +268,81 @@ export default function StudyCardDemo({
     });
   }, []);
 
-  // 자동 진행
+  const revealItem = useCallback((i: number, key: 'meanings' | 'example') => {
+    setRevealMap((prev) => {
+      const existing = prev[i] ?? { meanings: false, example: false };
+      if (existing[key]) return prev;
+      return { ...prev, [i]: { ...existing, [key]: true } };
+    });
+  }, []);
+
+  const stopPlaybackInternal = useCallback(() => {
+    playbackCancelRef.current = true;
+    if (nextCardTimerRef.current) {
+      window.clearTimeout(nextCardTimerRef.current);
+      nextCardTimerRef.current = null;
+    }
+    stopCurrentSound();
+    setSpeakingItem(null);
+  }, []);
+
+  // 자동 재생 — word → meanings → exampleSentences → exampleMeanings 순서로 TTS 재생
+  // 각 단계 진입 시 reveal + speakingItem 표시
+  const runPlay = useCallback(async () => {
+    const cardIdx = indexRef.current;
+    const w = demoWords[cardIdx];
+    if (!w) return;
+
+    const items: Array<{ id: string; text: string; lang: 'en' | 'ko'; revealKey: 'meanings' | 'example' | null }> = [
+      { id: 'word', text: w.word, lang: 'en', revealKey: null },
+      { id: 'meanings', text: w.meanings.join(', '), lang: 'ko', revealKey: 'meanings' },
+      { id: 'exampleSentences', text: w.example.en, lang: 'en', revealKey: 'example' },
+      { id: 'exampleMeanings', text: w.example.ko, lang: 'ko', revealKey: 'example' },
+    ];
+
+    for (const item of items) {
+      if (playbackCancelRef.current) return;
+      if (item.revealKey) revealItem(cardIdx, item.revealKey);
+      setSpeakingItem(item.id);
+      await getTextSound(item.text, item.lang);
+      if (playbackCancelRef.current) return;
+    }
+
+    setSpeakingItem(null);
+    if (playbackCancelRef.current) return;
+
+    advanceStatus(cardIdx);
+    markDone(cardIdx);
+
+    const nextIdx = indexRef.current + 1;
+    if (nextIdx < demoWords.length) {
+      setDirection(1);
+      setIndex(nextIdx);
+      nextCardTimerRef.current = window.setTimeout(() => {
+        if (!playbackCancelRef.current) runPlay();
+      }, NEXT_CARD_DELAY_MS);
+    } else {
+      setIsPlaying(false);
+    }
+  }, [advanceStatus, markDone, revealItem]);
+
+  const startPlayback = useCallback(() => {
+    playbackCancelRef.current = false;
+    runPlay();
+  }, [runPlay]);
+
+  // 시야 진입 + 재생 모드 → 자동 재생 시작 (한 번만)
+  const playbackStartedRef = useRef(false);
   useEffect(() => {
-    if (!hasEntered || !isPlaying) return;
+    if (!hasEntered || playbackStartedRef.current) return;
     const reduced =
       typeof window !== 'undefined' && window.matchMedia &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduced) return;
-    const t = window.setTimeout(() => {
-      advanceStatus(index);
-      markDone(index);
-      if (index < demoWords.length - 1) {
-        setDirection(1);
-        setIndex((i) => i + 1);
-      } else {
-        setIsPlaying(false);
-      }
-    }, AUTO_ADVANCE_MS);
-    return () => window.clearTimeout(t);
-  }, [index, hasEntered, isPlaying, advanceStatus, markDone]);
+    playbackStartedRef.current = true;
+    setIsPlaying(true);
+    startPlayback();
+  }, [hasEntered, startPlayback]);
 
   // 메트릭 알림
   useEffect(() => {
@@ -290,16 +359,12 @@ export default function StudyCardDemo({
     });
   }, [index, revealMap, doneSet, statusMap, isPlaying, onMetricsChange]);
 
-  // 언마운트 시 재생 중인 오디오 정리
-  useEffect(() => {
-    return () => {
-      stopCurrentSound();
-    };
-  }, []);
+  // 언마운트 정리
+  useEffect(() => () => stopPlaybackInternal(), [stopPlaybackInternal]);
 
   const goNext = () => {
     if (index < demoWords.length - 1) {
-      stopCurrentSound();
+      stopPlaybackInternal();
       setIsPlaying(false);
       advanceStatus(index);
       markDone(index);
@@ -309,33 +374,32 @@ export default function StudyCardDemo({
   };
   const goPrev = () => {
     if (index > 0) {
-      stopCurrentSound();
+      stopPlaybackInternal();
       setIsPlaying(false);
       setDirection(-1);
       setIndex((i) => i - 1);
     }
   };
   const togglePlay = () => {
-    setIsPlaying((p) => {
-      if (p) stopCurrentSound();
-      return !p;
-    });
+    if (isPlaying) {
+      stopPlaybackInternal();
+      setIsPlaying(false);
+    } else {
+      setIsPlaying(true);
+      startPlayback();
+    }
   };
 
   const handleReveal = (k: 'meanings' | 'example') => {
-    setRevealMap((m) => ({
-      ...m,
-      [index]: {
-        meanings: k === 'meanings' ? true : m[index]?.meanings ?? false,
-        example: k === 'example' ? true : m[index]?.example ?? false,
-      },
-    }));
+    revealItem(index, k);
+    stopPlaybackInternal();
     setIsPlaying(false);
   };
 
   const handleSpeak = (key: string, text: string, lang: 'en' | 'ko' = 'en') => {
-    setSpeakingItem(key);
+    stopPlaybackInternal();
     setIsPlaying(false);
+    setSpeakingItem(key);
     getTextSound(text, lang).then(() => {
       setSpeakingItem((prev) => (prev === key ? null : prev));
     });
@@ -388,14 +452,8 @@ export default function StudyCardDemo({
               <span>●●●●</span>
             </div>
 
-            {/* StudyHeader — 단순화 (좌: 뒤로가기, 우: 설정) */}
-            <div className="flex items-center justify-between px-[20px] pt-6">
-              <span className="text-[14px] font-semibold text-ink">오늘의 학습</span>
-              <span className="text-[12px] font-semibold text-mute">{index + 1} / {totalCards}</span>
-            </div>
-
             {/* 프로그레스 바 — 실서비스: h-[16px] rounded-[50px] */}
-            <div className="px-[20px] pt-[5px]">
+            <div className="px-[20px] pt-6">
               <motion.div className="relative mb-[8px] h-[16px] w-full overflow-hidden rounded-[50px] bg-primary-100">
                 <motion.div
                   className="h-full rounded-[50px] bg-primary-500"
@@ -445,9 +503,8 @@ export default function StudyCardDemo({
               </AnimatePresence>
             </div>
 
-            {/* 하단 3버튼 — 실서비스: h-[45px] rounded-[8px] text-[16px] font-[700] */}
+            {/* 하단 3버튼 */}
             <div className="flex gap-[10px] px-[20px] pb-[20px] pt-[20px]">
-              {/* 이전 */}
               <motion.button
                 type="button"
                 onClick={index > 0 ? goPrev : undefined}
@@ -463,7 +520,6 @@ export default function StudyCardDemo({
                 이전
               </motion.button>
 
-              {/* 재생/정지 */}
               <motion.button
                 type="button"
                 onClick={togglePlay}
@@ -474,7 +530,6 @@ export default function StudyCardDemo({
                 {isPlaying ? '정지' : '재생'}
               </motion.button>
 
-              {/* 다음 / 종료 */}
               {!isLast ? (
                 <motion.button
                   type="button"
@@ -489,7 +544,7 @@ export default function StudyCardDemo({
                 <motion.button
                   type="button"
                   onClick={() => {
-                    stopCurrentSound();
+                    stopPlaybackInternal();
                     setIndex(0);
                     setRevealMap({});
                     setDoneSet(new Set());
@@ -500,6 +555,11 @@ export default function StudyCardDemo({
                         return acc;
                       }, {}),
                     );
+                    playbackStartedRef.current = false;
+                    setTimeout(() => {
+                      playbackStartedRef.current = true;
+                      startPlayback();
+                    }, 50);
                   }}
                   aria-label="다시 시작"
                   className="flex h-[45px] flex-1 items-center justify-center rounded-[8px] bg-primary-500 text-[16px] font-bold text-white"
