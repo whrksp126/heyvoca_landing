@@ -1,0 +1,73 @@
+---
+// 카메라 뷰파인더 안에서 영문 텍스트가 자동으로 박스에 인식되는 시각화
+---
+
+<div class="relative overflow-hidden rounded-card border border-hairline bg-surface p-6 md:p-8">
+  {/* Camera viewfinder */}
+  <div class="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-ink/95">
+    {/* corner guides */}
+    <svg
+      class="absolute inset-0 h-full w-full"
+      viewBox="0 0 400 300"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <g stroke="rgba(255,255,255,0.85)" stroke-width="2.5" fill="none" stroke-linecap="round">
+        <path d="M 20 50 L 20 20 L 50 20" />
+        <path d="M 380 20 L 380 50" transform="translate(-30 0)" />
+        <path d="M 350 20 L 380 20 L 380 50" />
+        <path d="M 20 280 L 20 250" />
+        <path d="M 20 280 L 50 280" />
+        <path d="M 380 250 L 380 280 L 350 280" />
+      </g>
+    </svg>
+
+    {/* Sample text being scanned */}
+    <div class="absolute inset-x-6 top-10 space-y-2 text-white">
+      <p class="font-serif text-[15px] leading-[1.45] text-white/90">
+        The <span class="relative inline-block rounded bg-primary-500/30 px-1 outline outline-1 outline-primary-500">serendipity</span>
+        of meeting her changed everything. We
+        <span class="relative inline-block rounded bg-primary-500/30 px-1 outline outline-1 outline-primary-500">accomplished</span>
+        more in a year than ever before.
+      </p>
+      <p class="font-serif text-[15px] leading-[1.45] text-white/70">
+        Her <span class="relative inline-block rounded bg-primary-500/30 px-1 outline outline-1 outline-primary-500">mellifluous</span>
+        voice carried through the night.
+      </p>
+    </div>
+
+    {/* scan line */}
+    <div
+      class="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-primary-500 to-transparent"
+      style="top: 70%; box-shadow: 0 0 12px rgba(255,112,212,0.6);"
+    ></div>
+
+    {/* badge */}
+    <div class="absolute bottom-4 right-4 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-[11px] font-semibold text-ink">
+      <span class="h-1.5 w-1.5 rounded-full bg-primary-500"></span>
+      3 단어 인식
+    </div>
+  </div>
+
+  {/* Result chips */}
+  <div class="mt-4 flex flex-wrap gap-2">
+    <span class="inline-flex items-center gap-1.5 rounded-full border border-hairline bg-white px-3 py-1.5 font-mono text-body-sm text-ink">
+      serendipity
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FF70D4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M20 6L9 17l-5-5" />
+      </svg>
+    </span>
+    <span class="inline-flex items-center gap-1.5 rounded-full border border-hairline bg-white px-3 py-1.5 font-mono text-body-sm text-ink">
+      accomplish
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FF70D4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M20 6L9 17l-5-5" />
+      </svg>
+    </span>
+    <span class="inline-flex items-center gap-1.5 rounded-full border border-hairline bg-white px-3 py-1.5 font-mono text-body-sm text-ink">
+      mellifluous
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FF70D4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M20 6L9 17l-5-5" />
+      </svg>
+    </span>
+  </div>
+</div>

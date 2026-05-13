@@ -1,0 +1,106 @@
+---
+// Solution 하단 시각 보강: dots pulse 정적 SVG.
+// public/lottie/solution-memory.lottie 추가 시 LottieView로 교체 가능.
+
+const days = [
+  { d: 'Day 1', state: '처음 학습', accent: false },
+  { d: 'Day 3', state: '첫 복습', accent: false },
+  { d: 'Day 7', state: '심층 복습', accent: true },
+  { d: 'Day 15', state: '안정화', accent: false },
+  { d: 'Day 30', state: '장기 기억', accent: false },
+];
+---
+
+<section id="how" class="section bg-surface hairline-t hairline-b" aria-labelledby="solution-h2">
+  <div class="container-content grid items-start gap-12 lg:grid-cols-12 lg:gap-20">
+    {/* 좌측: 헤딩 + 본문 (sticky) */}
+    <div class="lg:col-span-7 lg:sticky lg:top-24" data-reveal>
+      <span class="eyebrow">
+        <span class="h-1.5 w-1.5 rounded-full bg-primary-500"></span>
+        해결책
+      </span>
+      <h2
+        id="solution-h2"
+        class="mt-6 text-balance text-[36px] font-bold leading-[1.12] tracking-tight text-ink md:text-display-lg lg:text-display-xl"
+      >
+        당신은 그냥 외우세요.<br />
+        다시 만날 시점은 <span class="text-primary-500">헤이보카</span>가 결정합니다.
+      </h2>
+      <p class="mt-6 max-w-prose text-body-lg text-sub text-pretty">
+        수많은 학습 데이터로 학습된 기억 모델이, 단어마다 다음 복습 시점을 자동으로 계산합니다.
+        가물가물한 단어는 빠르게, 단단해진 단어는 길게 — 알아서.
+      </p>
+
+      <dl class="mt-10 grid max-w-prose grid-cols-1 gap-y-6 md:grid-cols-2">
+        <div>
+          <dt class="text-caption font-medium uppercase tracking-[0.12em] text-mute">자동 스케줄링</dt>
+          <dd class="mt-2 text-body text-ink">
+            오늘 무엇을 복습해야 하는지, 더 이상 결정하지 마세요.
+          </dd>
+        </div>
+        <div>
+          <dt class="text-caption font-medium uppercase tracking-[0.12em] text-mute">약점 자동 진단</dt>
+          <dd class="mt-2 text-body text-ink">
+            자주 틀리는 문제 유형을 추적해, 필요한 만큼 더 보여줍니다.
+          </dd>
+        </div>
+        <div>
+          <dt class="text-caption font-medium uppercase tracking-[0.12em] text-mute">개인화</dt>
+          <dd class="mt-2 text-body text-ink">
+            당신의 학습 패턴에 맞게 간격이 미세 조정됩니다.
+          </dd>
+        </div>
+        <div>
+          <dt class="text-caption font-medium uppercase tracking-[0.12em] text-mute">3개 플랫폼 동기화</dt>
+          <dd class="mt-2 text-body text-ink">
+            iPhone에서 외운 단어를, 안드로이드에서, 웹에서 그대로.
+          </dd>
+        </div>
+      </dl>
+    </div>
+
+    {/* 우측: 타임라인 카드 + Lottie */}
+    <div class="lg:col-span-5" data-reveal>
+      <div class="card relative overflow-hidden p-6 md:p-8">
+        <div class="mb-6 flex items-center justify-between">
+          <p class="text-caption font-semibold uppercase tracking-[0.12em] text-mute">복습 타임라인</p>
+          <span class="text-caption text-mute">기억 모델 v5</span>
+        </div>
+
+        <div class="relative">
+          {/* 세로 진행선 */}
+          <div class="absolute left-[15px] top-2 bottom-2 w-px bg-hairline" aria-hidden="true"></div>
+          <ul class="space-y-5">
+            {days.map((d) => (
+              <li class="relative flex items-center gap-4">
+                <span class={`relative z-10 inline-flex h-[30px] w-[30px] items-center justify-center rounded-full border ${d.accent ? 'border-primary-500 bg-primary-100' : 'border-hairline bg-white'}`}>
+                  <span class={`h-2 w-2 rounded-full ${d.accent ? 'bg-primary-500 animate-pulse-ring' : 'bg-mute'}`}></span>
+                </span>
+                <div class="flex flex-1 items-center justify-between">
+                  <p class="text-body font-semibold text-ink">{d.d}</p>
+                  <p class="text-body-sm text-sub">{d.state}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* 시각 보강: 기억 펄스 라인 */}
+        <div class="mt-6 flex h-16 items-center justify-between px-1" aria-hidden="true">
+          <span class="h-2.5 w-2.5 rounded-full bg-ink/80"></span>
+          <span class="h-px flex-1 bg-hairline"></span>
+          <span class="h-2.5 w-2.5 rounded-full bg-ink/40"></span>
+          <span class="h-px flex-1 bg-hairline"></span>
+          <span class="relative inline-flex h-4 w-4 items-center justify-center">
+            <span class="absolute h-4 w-4 rounded-full bg-primary-500/30 animate-pulse-ring"></span>
+            <span class="relative h-2.5 w-2.5 rounded-full bg-primary-500"></span>
+          </span>
+          <span class="h-px flex-1 bg-hairline"></span>
+          <span class="h-2.5 w-2.5 rounded-full bg-ink/30"></span>
+          <span class="h-px flex-1 bg-hairline"></span>
+          <span class="h-2.5 w-2.5 rounded-full bg-ink/20"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,48 @@
+---
+import ForgettingCurve from './svg/ForgettingCurve.astro';
+---
+
+<section class="section bg-white" aria-labelledby="problem-h2">
+  <div class="container-content grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
+    <div data-reveal>
+      <span class="eyebrow">
+        <span class="h-1.5 w-1.5 rounded-full bg-mute"></span>
+        문제
+      </span>
+      <h2
+        id="problem-h2"
+        class="mt-6 text-balance text-[36px] font-bold leading-[1.12] tracking-tight text-ink md:text-display-lg lg:text-display-xl"
+      >
+        외운 단어,<br />
+        일주일이면 절반이 사라집니다.
+      </h2>
+      <p class="mt-6 max-w-prose text-body-lg text-sub text-pretty">
+        문제는 '몰랐던 단어'가 아니라 <b class="text-ink">'외웠는데 가물가물한 단어'</b>입니다.
+        복습 시점을 놓치면, 어렵게 외운 단어도 일주일 안에 절반이 휘발됩니다.
+      </p>
+      <ul class="mt-8 space-y-3 text-body text-sub">
+        <li class="flex items-start gap-3">
+          <span class="mt-2 h-1 w-1 rounded-full bg-mute"></span>
+          매번 새로 외우는 단어가, 사실은 예전에 외웠던 단어
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="mt-2 h-1 w-1 rounded-full bg-mute"></span>
+          어떤 단어를, 언제 다시 봐야 할지 직접 결정해야 하는 피로
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="mt-2 h-1 w-1 rounded-full bg-mute"></span>
+          자주 틀리는 유형이 무엇인지 — 본인도 모름
+        </li>
+      </ul>
+    </div>
+
+    <div data-reveal>
+      <div class="card p-6 md:p-8">
+        <ForgettingCurve />
+        <p class="mt-4 text-caption text-mute">
+          기억 저장률은 시간이 지날수록 떨어집니다. 일주일이 위험 구간.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>

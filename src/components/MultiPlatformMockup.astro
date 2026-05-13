@@ -1,0 +1,69 @@
+---
+// 3 기기 (iPhone, Android, Web) 동기화 미니 mockup
+---
+
+<div class="relative rounded-card border border-hairline bg-surface p-6 md:p-8">
+  <div class="relative h-[320px] md:h-[360px]">
+    {/* Browser (back) */}
+    <div class="absolute left-1/2 top-2 z-10 w-[80%] max-w-[400px] -translate-x-1/2 overflow-hidden rounded-xl border border-hairline bg-white shadow-card">
+      <div class="flex items-center gap-1.5 border-b border-hairline px-3 py-2">
+        <span class="h-2 w-2 rounded-full bg-hairline"></span>
+        <span class="h-2 w-2 rounded-full bg-hairline"></span>
+        <span class="h-2 w-2 rounded-full bg-hairline"></span>
+        <div class="ml-3 flex-1 truncate rounded bg-surface px-2 py-1 text-[10px] text-mute">heyvoca.ghmate.com</div>
+      </div>
+      <div class="flex items-center justify-between px-4 py-3 text-[11px]">
+        <span class="font-mono font-semibold text-ink">serendipity</span>
+        <span class="rounded-full bg-primary-100 px-2 py-0.5 font-semibold text-primary-700">+ 단어장</span>
+      </div>
+      <div class="flex items-center justify-between border-t border-hairline px-4 py-3 text-[11px]">
+        <span class="font-mono text-sub">accomplish</span>
+        <span class="text-mute">7일 뒤 복습</span>
+      </div>
+      <div class="flex items-center justify-between border-t border-hairline px-4 py-3 text-[11px]">
+        <span class="font-mono text-sub">mellifluous</span>
+        <span class="text-mute">3일 뒤 복습</span>
+      </div>
+    </div>
+
+    {/* iPhone (front-left) */}
+    <div class="absolute left-2 bottom-0 z-20 w-[120px] rounded-[24px] bg-ink p-[4px] shadow-card md:left-8 md:w-[140px]">
+      <div class="overflow-hidden rounded-[20px] bg-white">
+        <div class="flex items-center justify-between px-3 pt-2 text-[8px] font-semibold text-ink">
+          <span>9:41</span>
+          <span>●●●</span>
+        </div>
+        <div class="px-3 py-4">
+          <p class="text-[8px] font-semibold text-mute">오늘의 학습</p>
+          <p class="mt-1 font-mono text-[14px] font-bold text-ink">serendipity</p>
+          <div class="mt-3 flex justify-around">
+            <span class="rounded-full bg-surface px-2 py-0.5 text-[7px] font-semibold text-sub">모르겠음</span>
+            <span class="rounded-full bg-primary-500 px-2 py-0.5 text-[7px] font-semibold text-white">완벽</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Android (front-right) */}
+    <div class="absolute right-2 bottom-0 z-20 w-[120px] rounded-[22px] bg-[#2a2a2a] p-[3px] shadow-card md:right-8 md:w-[140px]">
+      <div class="overflow-hidden rounded-[19px] bg-white">
+        <div class="flex items-center justify-between px-3 pt-2 text-[8px] font-semibold text-ink">
+          <span>9:41</span>
+          <span>●●●</span>
+        </div>
+        <div class="px-3 py-4">
+          <p class="text-[8px] font-semibold text-mute">단어장</p>
+          <div class="mt-1 space-y-1">
+            <p class="font-mono text-[11px] text-ink">serendipity</p>
+            <p class="font-mono text-[11px] text-sub">accomplish</p>
+            <p class="font-mono text-[11px] text-sub">mellifluous</p>
+          </div>
+          <div class="mt-3 inline-flex items-center gap-1 rounded-full bg-primary-100 px-2 py-0.5 text-[7px] font-semibold text-primary-700">
+            <span class="h-1 w-1 rounded-full bg-primary-500"></span>
+            동기화됨
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

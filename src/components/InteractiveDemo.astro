@@ -1,0 +1,29 @@
+---
+import DemoStatsPanel from './demo/DemoStatsPanel.tsx';
+---
+
+<section id="demo" class="section bg-white" aria-labelledby="demo-h2">
+  <div class="container-content">
+    <div class="max-w-3xl" data-reveal>
+      <span class="eyebrow">
+        <span class="h-1.5 w-1.5 rounded-full bg-primary-500"></span>
+        한 번 해보세요
+      </span>
+      <h2
+        id="demo-h2"
+        class="mt-6 text-balance text-[36px] font-bold leading-[1.12] tracking-tight text-ink md:text-display-lg lg:text-display-xl"
+      >
+        실제 앱과 같은<br />
+        학습 흐름을 미리 체험해 보세요.
+      </h2>
+      <p class="mt-6 max-w-prose text-body-lg text-sub text-pretty">
+        스피커를 눌러 발음을 들어보고, 카드를 넘기며 단어를 익혀보세요.
+        오른쪽 패널이 학습 기록을 실시간으로 보여줍니다.
+      </p>
+    </div>
+
+    <div class="mt-14" data-reveal>
+      <DemoStatsPanel client:visible />
+    </div>
+  </div>
+</section>

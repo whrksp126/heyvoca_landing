@@ -9,9 +9,12 @@ interface Props {
   noIndex?: boolean;
 }
 
+const DEFAULT_DESC =
+  '외운 단어가 사라지기 전에. 데이터가 다음 복습 시점을 정해주는 영어 단어 학습 앱 헤이보카(Hey, Voca!). iOS · Android · Web, 무료.';
+
 const {
   title,
-  description = '망각 직전 다시 만나는 단어. SM2 알고리즘과 게임 같은 업적 시스템으로 영어 단어를 즐겁게 외우는 학습 앱 헤이보카(Hey, Voca!).',
+  description = DEFAULT_DESC,
   path = '/',
   ogImage = '/og-image.png',
   noIndex = false,
@@ -21,6 +24,9 @@ const SITE_URL = 'https://heyvoca.ghmate.com';
 const canonical = new URL(path, SITE_URL).toString();
 const ogImageUrl = new URL(ogImage, SITE_URL).toString();
 const fullTitle = title === '헤이보카 (Hey, Voca!)' ? title : `${title} | 헤이보카 (Hey, Voca!)`;
+
+const APPSTORE_URL = 'https://apps.apple.com/app/id6751544570';
+const PLAYSTORE_URL = 'https://play.google.com/store/apps/details?id=com.ghmate.heyvoca';
 
 const orgJsonLd = {
   '@context': 'https://schema.org',
@@ -42,12 +48,22 @@ const appJsonLd = {
   '@type': 'MobileApplication',
   name: '헤이보카',
   alternateName: 'Hey, Voca!',
-  operatingSystem: 'iOS, Android',
+  operatingSystem: 'iOS, Android, Web',
   applicationCategory: 'EducationalApplication',
   description,
   url: SITE_URL,
+  downloadUrl: [APPSTORE_URL, PLAYSTORE_URL],
+  inLanguage: 'ko-KR',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'KRW' },
   publisher: { '@type': 'Organization', name: '슬기로운 사업' },
+};
+
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: '헤이보카 (Hey, Voca!)',
+  url: SITE_URL,
+  inLanguage: 'ko-KR',
 };
 ---
 
@@ -56,9 +72,11 @@ const appJsonLd = {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#FF70D4" />
+    <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0A0A0A" media="(prefers-color-scheme: dark)" />
     <meta name="generator" content={Astro.generator} />
     <meta name="format-detection" content="telephone=no" />
+    <meta name="color-scheme" content="light" />
 
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
@@ -71,6 +89,9 @@ const appJsonLd = {
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="헤이보카 — 그냥 외우세요. 나머진 헤이보카가 알아서 합니다." />
     <meta property="og:locale" content="ko_KR" />
 
     <meta name="twitter:card" content="summary_large_image" />
@@ -78,13 +99,29 @@ const appJsonLd = {
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageUrl} />
 
-    <link rel="icon" type="image/png" href="/images/logo_h.png" />
-    <link rel="apple-touch-icon" href="/images/logo_h.png" />
+    {/* Favicons / PWA */}
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    {/* Fonts */}
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/Cafe24Ssurround-v2.0.woff2"
+      crossorigin
+    />
 
     <script type="application/ld+json" set:html={JSON.stringify(orgJsonLd)}></script>
     <script type="application/ld+json" set:html={JSON.stringify(appJsonLd)}></script>
+    <script type="application/ld+json" set:html={JSON.stringify(websiteJsonLd)}></script>
   </head>
   <body class="min-h-screen bg-white">
     <slot />
+    <script src="/scripts/reveal.client.js" defer></script>
   </body>
 </html>

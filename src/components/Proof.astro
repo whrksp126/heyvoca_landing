@@ -1,0 +1,44 @@
+---
+const stats = [
+  { value: '4,680+', label: '큐레이션 단어' },
+  { value: '7', label: '학습 카테고리' },
+  { value: '3', label: '동시 운영 플랫폼 (iOS · Android · Web)' },
+  { value: '2026.05', label: '정식 서비스 시작' },
+];
+---
+
+<section class="section bg-surface hairline-t hairline-b" aria-labelledby="proof-h2">
+  <div class="container-content">
+    <div class="max-w-3xl" data-reveal>
+      <span class="eyebrow">
+        <span class="h-1.5 w-1.5 rounded-full bg-mute"></span>
+        지금의 헤이보카
+      </span>
+      <h2
+        id="proof-h2"
+        class="mt-6 text-balance text-[32px] font-bold leading-[1.12] tracking-tight text-ink md:text-display-md lg:text-display-lg"
+      >
+        과장 없이, 정직하게.
+      </h2>
+      <p class="mt-5 max-w-prose text-body-lg text-sub text-pretty">
+        2026년 5월, 정식 서비스를 시작했습니다.
+        지금까지 만든 것들과, 앞으로 함께 만들어 갈 것들을 솔직하게 적어둡니다.
+      </p>
+    </div>
+
+    <dl
+      class="mt-12 grid gap-x-8 gap-y-10 md:grid-cols-2 lg:grid-cols-4"
+      data-reveal-stagger
+      data-stagger-ms="100"
+    >
+      {stats.map((s) => (
+        <div>
+          <dt class="text-caption font-medium uppercase tracking-[0.12em] text-mute">{s.label}</dt>
+          <dd class="mt-3 text-balance text-[40px] font-bold leading-none tracking-tight text-ink md:text-display-md lg:text-display-lg">
+            {s.value}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  </div>
+</section>

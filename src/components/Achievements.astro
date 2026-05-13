@@ -1,0 +1,54 @@
+---
+const kings = [
+  { src: '/images/AttendanceKing.png', name: '출석왕', desc: '연속 출석으로 만나요' },
+  { src: '/images/MemorizedKing.png', name: '암기왕', desc: '많은 단어를 완벽 암기' },
+  { src: '/images/PerseveranceKing.png', name: '끈기왕', desc: '매일 한 발씩 꾸준히' },
+  { src: '/images/WordKing.png', name: '단어왕', desc: '학습 누적량의 정점' },
+  { src: '/images/ReadingKing.png', name: '독서왕', desc: '책 속 단어를 모은 자' },
+  { src: '/images/NoryeokKing.png', name: '노력왕', desc: '일일 미션 완수자' },
+  { src: '/images/InviteKing.png', name: '초대왕', desc: '함께 배우는 즐거움' },
+];
+---
+
+<section id="achievements" class="section bg-white" aria-labelledby="achievements-h2">
+  <div class="container-content">
+    <div class="mx-auto max-w-3xl text-center" data-reveal>
+      <span class="eyebrow justify-center">
+        <span class="h-1.5 w-1.5 rounded-full bg-primary-500"></span>
+        업적
+      </span>
+      <h2
+        id="achievements-h2"
+        class="mt-6 text-balance text-[36px] font-bold leading-[1.12] tracking-tight text-ink md:text-display-lg lg:text-display-xl"
+      >
+        당신의 학습엔,<br />
+        <span class="font-display text-primary-500">왕좌</span>가 일곱 자리 있습니다.
+      </h2>
+      <p class="mt-6 text-body-lg text-sub text-pretty">
+        출석 · 암기 · 끈기 · 단어 · 독서 · 노력 · 초대 — 모든 노력을 기록하고, 작은 즐거움으로 돌려드립니다.
+      </p>
+    </div>
+
+    <ul
+      class="mt-16 grid grid-cols-3 gap-x-6 gap-y-10 md:grid-cols-4 lg:grid-cols-7 lg:gap-x-4"
+      data-reveal-stagger
+      data-stagger-ms="80"
+    >
+      {kings.map((k) => (
+        <li class="flex flex-col items-center text-center">
+          <img
+            src={k.src}
+            alt=""
+            width="180"
+            height="180"
+            loading="lazy"
+            decoding="async"
+            class="h-auto w-[120px] select-none transition-transform duration-300 hover:-translate-y-1 lg:w-[128px]"
+          />
+          <p class="mt-3 font-display text-heading-md text-ink">{k.name}</p>
+          <p class="mt-1 text-caption text-mute">{k.desc}</p>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
