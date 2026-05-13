@@ -317,9 +317,11 @@ export function nextStatusOnGood(status: MemoryStatus): MemoryStatus {
 }
 
 // 오답(모르겠음) 시 다음 상태
+// 학습을 한 번이라도 했으면 미학습으로 떨어지지 않음 — 최소 단기암기(leaf) 유지
 export function nextStatusOnBad(status: MemoryStatus): MemoryStatus {
-  if (status === 'overdue') return 'unlearned'; // overdue에서 모르겠음 → 처음으로
+  if (status === 'overdue') return 'leaf'; // overdue에서 오답 → leaf
+  if (status === 'unlearned') return 'leaf'; // 미학습이라도 학습 시도했으니 leaf 진입
   const idx = memoryStatusOrder.indexOf(status);
-  if (idx <= 0) return 'unlearned';
+  if (idx <= 1) return 'leaf'; // leaf 이하는 leaf 유지
   return memoryStatusOrder[idx - 1];
 }

@@ -79,33 +79,37 @@ function CardFace({ word, revealedFlags, onReveal, onSpeak, speakingItem, status
           <p className="mt-[2px] text-[13px] font-normal text-sub">{word.ipa}</p>
         </div>
 
-        {/* 의미 */}
+        {/* 의미 — 각각 독립적으로 active */}
         {revealedFlags.meanings ? (
           <div className="flex flex-col gap-[4px]">
-            {word.meanings.map((m, i) => (
-              <div key={i} className="flex items-center justify-between gap-[8px]">
-                <span
-                  className={`flex-1 text-[13px] font-normal leading-[16px] ${
-                    speakingItem === 'meanings' ? 'text-primary-500' : 'text-sub'
-                  }`}
-                >
-                  {m}
-                </span>
-                <motion.button
-                  type="button"
-                  onClick={() => onSpeak('meanings', m, 'ko')}
-                  aria-label={`${m} 듣기`}
-                  whileTap={{ scale: 0.85 }}
-                >
-                  <SpeakerHigh
-                    weight="fill"
-                    size={16}
-                    color={speakingItem === 'meanings' ? '#FF70D4' : '#C5C5C5'}
-                    aria-hidden
-                  />
-                </motion.button>
-              </div>
-            ))}
+            {word.meanings.map((m, i) => {
+              const meaningKey = `meaning-${i}`;
+              const isActive = speakingItem === meaningKey;
+              return (
+                <div key={i} className="flex items-center justify-between gap-[8px]">
+                  <span
+                    className={`flex-1 text-[13px] font-normal leading-[16px] ${
+                      isActive ? 'text-primary-500' : 'text-sub'
+                    }`}
+                  >
+                    {m}
+                  </span>
+                  <motion.button
+                    type="button"
+                    onClick={() => onSpeak(meaningKey, m, 'ko')}
+                    aria-label={`${m} 듣기`}
+                    whileTap={{ scale: 0.85 }}
+                  >
+                    <SpeakerHigh
+                      weight="fill"
+                      size={16}
+                      color={isActive ? '#FF70D4' : '#C5C5C5'}
+                      aria-hidden
+                    />
+                  </motion.button>
+                </div>
+              );
+            })}
           </div>
         ) : (
           <HiddenPlaceholder label="의미" onReveal={() => onReveal('meanings')} />
@@ -207,8 +211,9 @@ export default function StudyCardDemo({
   const [index, setIndex] = useState(0);
   const [revealMap, setRevealMap] = useState<Record<number, RevealFlags>>({});
   const [doneSet, setDoneSet] = useState<Set<number>>(new Set());
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [hasEntered, setHasEntered] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [userStarted, setUserStarted] = useState(false);
+  const [hasEverStarted, setHasEverStarted] = useState(false);
   const [direction, setDirection] = useState<1 | -1>(1);
   const [speakingItem, setSpeakingItem] = useState<string | null>(null);
 
@@ -231,24 +236,6 @@ export default function StudyCardDemo({
   useEffect(() => {
     indexRef.current = index;
   }, [index]);
-
-  // 스크롤 진입 감지 → 자동 재생 시작
-  useEffect(() => {
-    if (!rootRef.current) return;
-    const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            setHasEntered(true);
-            obs.disconnect();
-          }
-        });
-      },
-      { threshold: 0.3 },
-    );
-    obs.observe(rootRef.current);
-    return () => obs.disconnect();
-  }, []);
 
   const markDone = useCallback((i: number) => {
     setDoneSet((prev) => {
@@ -295,7 +282,13 @@ export default function StudyCardDemo({
 
     const items: Array<{ id: string; text: string; lang: 'en' | 'ko'; revealKey: 'meanings' | 'example' | null }> = [
       { id: 'word', text: w.word, lang: 'en', revealKey: null },
-      { id: 'meanings', text: w.meanings.join(', '), lang: 'ko', revealKey: 'meanings' },
+      // 각 의미를 개별 아이템으로 분리 — 동시 active 방지
+      ...w.meanings.map((m, i) => ({
+        id: `meaning-${i}`,
+        text: m,
+        lang: 'ko' as const,
+        revealKey: 'meanings' as const,
+      })),
       { id: 'exampleSentences', text: w.example.en, lang: 'en', revealKey: 'example' },
       { id: 'exampleMeanings', text: w.example.ko, lang: 'ko', revealKey: 'example' },
     ];
@@ -323,6 +316,10 @@ export default function StudyCardDemo({
       }, NEXT_CARD_DELAY_MS);
     } else {
       setIsPlaying(false);
+      // 마지막 카드 완료 → 1.5초 후 게이트로 복귀
+      nextCardTimerRef.current = window.setTimeout(() => {
+        if (!playbackCancelRef.current) setUserStarted(false);
+      }, 1500);
     }
   }, [advanceStatus, markDone, revealItem]);
 
@@ -331,18 +328,30 @@ export default function StudyCardDemo({
     runPlay();
   }, [runPlay]);
 
-  // 시야 진입 + 재생 모드 → 자동 재생 시작 (한 번만)
-  const playbackStartedRef = useRef(false);
-  useEffect(() => {
-    if (!hasEntered || playbackStartedRef.current) return;
-    const reduced =
-      typeof window !== 'undefined' && window.matchMedia &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduced) return;
-    playbackStartedRef.current = true;
+  const handleStartDemo = useCallback(() => {
+    // 모든 상태 초기화 후 자동 재생 시작
+    stopCurrentSound();
+    playbackCancelRef.current = false;
+    setIndex(0);
+    indexRef.current = 0;
+    setDirection(1);
+    setRevealMap({});
+    setDoneSet(new Set());
+    setStatusMap(
+      demoWords.reduce<Record<number, MemoryStatus>>((acc, w, i) => {
+        acc[i] = w.status;
+        return acc;
+      }, {}),
+    );
+    setUserStarted(true);
+    setHasEverStarted(true);
     setIsPlaying(true);
-    startPlayback();
-  }, [hasEntered, startPlayback]);
+    // 다음 tick에 startPlayback (state 반영 보장)
+    window.setTimeout(() => {
+      playbackCancelRef.current = false;
+      runPlay();
+    }, 50);
+  }, [runPlay]);
 
   // 메트릭 알림
   useEffect(() => {
@@ -442,7 +451,7 @@ export default function StudyCardDemo({
     <div ref={rootRef} className="relative">
       {/* iPhone 프레임 */}
       <div className="relative mx-auto w-full max-w-[360px]">
-        <div className="rounded-[44px] bg-ink p-[6px] shadow-card">
+        <div className="relative rounded-[44px] bg-ink p-[6px] shadow-card">
           <div className="relative overflow-hidden rounded-[38px] bg-white">
             <div className="absolute left-1/2 top-3 z-20 h-[22px] w-[88px] -translate-x-1/2 rounded-full bg-ink" />
 
@@ -503,6 +512,31 @@ export default function StudyCardDemo({
               </AnimatePresence>
             </div>
 
+            {/* 시작 게이트 오버레이 — iPhone 화면 영역 위에만 */}
+            <AnimatePresence>
+              {!userStarted && (
+                <motion.div
+                  key="gate"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="absolute inset-0 z-30 flex items-center justify-center bg-white/70 backdrop-blur-sm"
+                >
+                  <motion.button
+                    type="button"
+                    onClick={handleStartDemo}
+                    aria-label={hasEverStarted ? '다시 체험하기' : '체험하기'}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="rounded-[10px] bg-[#FF70D4] px-[28px] h-[52px] text-[15px] font-bold text-white shadow-[0_10px_28px_rgba(255,112,212,0.4)]"
+                  >
+                    {hasEverStarted ? '다시 체험하기' : '체험하기'}
+                  </motion.button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* 하단 3버튼 */}
             <div className="flex gap-[10px] px-[20px] pb-[20px] pt-[20px]">
               <motion.button
@@ -545,23 +579,10 @@ export default function StudyCardDemo({
                   type="button"
                   onClick={() => {
                     stopPlaybackInternal();
-                    setIndex(0);
-                    setRevealMap({});
-                    setDoneSet(new Set());
-                    setIsPlaying(true);
-                    setStatusMap(
-                      demoWords.reduce<Record<number, MemoryStatus>>((acc, w, i) => {
-                        acc[i] = w.status;
-                        return acc;
-                      }, {}),
-                    );
-                    playbackStartedRef.current = false;
-                    setTimeout(() => {
-                      playbackStartedRef.current = true;
-                      startPlayback();
-                    }, 50);
+                    setIsPlaying(false);
+                    setUserStarted(false);
                   }}
-                  aria-label="다시 시작"
+                  aria-label="종료"
                   className="flex h-[45px] flex-1 items-center justify-center rounded-[8px] bg-primary-500 text-[16px] font-bold text-white"
                   whileTap={{ scale: 0.95 }}
                 >
