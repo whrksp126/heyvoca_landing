@@ -1,0 +1,59 @@
+---
+// 카메라 OCR 시뮬레이션 — 좌측 카피 + 우측 React island.
+// OcrSimulationDemo.tsx는 Agent 2가 작성/덮어쓰는 컴포넌트.
+import OcrSimulationDemo from './demo/OcrSimulationDemo';
+
+const bullets = [
+  '영문 텍스트만 자동 분리',
+  '뜻 · 발음 · 예문 자동 매칭',
+  '단어장 한 번에 일괄 추가',
+];
+---
+
+<section class="section bg-white" aria-labelledby="ocr-h2">
+  <div class="container-content grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
+    {/* 좌측: 카피 */}
+    <div data-reveal>
+      <span class="eyebrow">
+        <span class="h-1.5 w-1.5 rounded-full bg-primary-500"></span>
+        카메라 검색
+      </span>
+      <h2
+        id="ocr-h2"
+        class="mt-6 text-balance text-[36px] font-bold leading-[1.12] tracking-tight text-ink md:text-display-lg lg:text-display-xl"
+      >
+        사진 한 장으로,<br />
+        단어가 단어장에 들어옵니다.
+      </h2>
+      <p class="mt-6 max-w-prose text-body-lg text-sub text-pretty">
+        책이나 뉴스에서 모르는 영단어를 만났을 때, 그냥 사진을 찍으세요.
+        헤이보카가 텍스트를 인식해 뜻과 예문까지 함께 보여줍니다.
+      </p>
+      <ul class="mt-8 space-y-3 text-body text-sub">
+        {bullets.map((b) => (
+          <li class="flex items-center gap-3">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#FF70D4"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M20 6L9 17l-5-5" />
+            </svg>
+            {b}
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    {/* 우측: 데모 */}
+    <div data-reveal>
+      <OcrSimulationDemo client:visible />
+    </div>
+  </div>
+</section>

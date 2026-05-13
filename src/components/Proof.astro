@@ -1,8 +1,12 @@
 ---
+// 지금의 헤이보카 — 정량 지표 4종.
+// dictWordCount, dictExampleCount는 src/data/dictionaryStats.ts에서 import.
+import { dictWordCount, dictExampleCount } from '../data/dictionaryStats';
+
 const stats = [
-  { value: '4,680+', label: '큐레이션 단어' },
+  { value: dictWordCount, label: '큐레이션 단어 (자체 사전)' },
   { value: '7', label: '학습 카테고리' },
-  { value: '3', label: '동시 운영 플랫폼 (iOS · Android · Web)' },
+  { value: dictExampleCount, label: '예문 (자체 사전)' },
   { value: '2026.05', label: '정식 서비스 시작' },
 ];
 ---

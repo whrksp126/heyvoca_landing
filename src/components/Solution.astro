@@ -1,14 +1,53 @@
 ---
-// Solution 하단 시각 보강: dots pulse 정적 SVG.
-// public/lottie/solution-memory.lottie 추가 시 LottieView로 교체 가능.
+// Solution: 헤이보카의 4가지 핵심 강점 + 5단계 암기 상태 진화 카드
+// 5단계 색상 토큰은 tailwind.config.mjs의 memory.* 출처.
 
-const days = [
-  { d: 'Day 1', state: '처음 학습', accent: false },
-  { d: 'Day 3', state: '첫 복습', accent: false },
-  { d: 'Day 7', state: '심층 복습', accent: true },
-  { d: 'Day 15', state: '안정화', accent: false },
-  { d: 'Day 30', state: '장기 기억', accent: false },
+// 5단계 암기 상태 (heyvoca_front MemorizationStatus.jsx 매칭)
+// unlearned → leaf → plant → carrot 순으로 진행되며, overdue는 별도 분기 상태.
+const memoryStates = [
+  {
+    key: 'unlearned',
+    name: '미학습',
+    desc: '아직 만나지 않았거나, 처음 보는 단어',
+    color: '#9D835A',
+    // Phosphor EggCrack (Bold) — 인라인 SVG path
+    icon: `<path d="M128 16C76 16 40 76 40 128a88 88 0 0 0 176 0c0-52-36-112-88-112Zm0 184a72 72 0 0 1-72-72c0-43.43 28.86-96 72-96s72 52.57 72 96a72 72 0 0 1-72 72Zm-3.06-95.7-32 24a8 8 0 0 0-2.8 9.34l16 40a8 8 0 0 0 14.34-1.83l9.16-22.9 24.92 18.69a8 8 0 0 0 11.65-9.7l-16-40a8 8 0 0 0-13.34-2.16Z" fill="currentColor"/>`,
+  },
+  {
+    key: 'leaf',
+    name: '단기암기',
+    desc: '최근 외운 단어, 아직 흔들리는 단계',
+    color: '#77CE4F',
+    // Phosphor Leaf
+    icon: `<path d="M223.5 32h-72A104.6 104.6 0 0 0 47 136.5a103.66 103.66 0 0 0 21.5 63.27L43.05 225.21a8 8 0 0 0 11.32 11.32l25.41-25.41A103.66 103.66 0 0 0 143 232.55a104.59 104.59 0 0 0 104.5-104.5v-88a8 8 0 0 0-8-8.05Zm-8 96A88.59 88.59 0 0 1 127 216.55a87.61 87.61 0 0 1-50.3-15.86l119.95-119.96a8 8 0 0 0-11.31-11.32L65.31 189.36A87.6 87.6 0 0 1 49.5 136.5 88.59 88.59 0 0 1 138 48h77.5Z" fill="currentColor"/>`,
+  },
+  {
+    key: 'plant',
+    name: '중기암기',
+    desc: '여러 번 만나며 자리잡기 시작한 단어',
+    color: '#38CE38',
+    // Phosphor Plant
+    icon: `<path d="M247.63 47.89a8 8 0 0 0-7.52-7.52c-51-2.86-93.81 14-117.41 46.2A78.85 78.85 0 0 0 108 132.42l-10.46 12.83a82.85 82.85 0 0 0-15-23.94c-20.59-23.81-54.74-35.43-93.69-31.86a8 8 0 0 0-7.21 7.21c-3.57 38.95 8.05 73.1 31.86 93.69 14.32 12.39 32.55 19 51.83 19 1.7 0 3.4 0 5.1-.15a82.5 82.5 0 0 0 14.71-2.34c-1.13 4.5-1.79 9.21-2.16 14H64a8 8 0 0 0 0 16h64a8 8 0 0 0 0-16h-9.92a64.49 64.49 0 0 1 17.84-38.21l25.66-31.45A98.81 98.81 0 0 0 217.4 158c19.5-22.9 32.16-55.32 30.23-110.11ZM72.93 191.21A55.69 55.69 0 0 1 24 144a55.7 55.7 0 0 1 41-15.21A55.71 55.71 0 0 1 113.93 176a55.7 55.7 0 0 1-41 15.21Z" fill="currentColor"/>`,
+  },
+  {
+    key: 'carrot',
+    name: '장기암기',
+    desc: '단단히 자리잡아, 오래 가는 단어',
+    color: '#F68300',
+    // Phosphor Carrot (간략화 — 당근 형상)
+    icon: `<path d="M229.66 26.34a8 8 0 0 0-11.32 0l-37.42 37.42-13-13a8 8 0 0 0-11.32 11.32l13 13L141 95.66l-11.34-11.32a8 8 0 0 0-11.31 11.31l11.31 11.32-100.32 100.34a8 8 0 0 0 5.66 13.66h.16l52.42-1a8 8 0 0 0 5.66-2.34L213 117.66a8 8 0 0 0 2.34-5.66l1-52.42a8 8 0 0 0-.34-2.42l13.66-13.5a8 8 0 0 0 0-11.32Z" fill="currentColor"/>`,
+  },
 ];
+
+// 별도 분기 상태 (복습 지연)
+const overdueState = {
+  key: 'overdue',
+  name: '복습 지연',
+  desc: '복습 시점을 놓친 단어 — 별도 큐로 우선 관리',
+  color: '#F26A6A',
+  // 경고/알람 아이콘
+  icon: `<path d="M128 24a104 104 0 1 0 104 104A104.12 104.12 0 0 0 128 24Zm0 192a88 88 0 1 1 88-88 88.1 88.1 0 0 1-88 88Zm-8-80V80a8 8 0 0 1 16 0v56a8 8 0 0 1-16 0Zm20 36a12 12 0 1 1-12-12 12 12 0 0 1 12 12Z" fill="currentColor"/>`,
+};
 ---
 
 <section id="how" class="section bg-surface hairline-t hairline-b" aria-labelledby="solution-h2">
@@ -24,7 +63,7 @@ const days = [
         class="mt-6 text-balance text-[36px] font-bold leading-[1.12] tracking-tight text-ink md:text-display-lg lg:text-display-xl"
       >
         당신은 그냥 외우세요.<br />
-        다시 만날 시점은 <span class="text-primary-500">헤이보카</span>가 결정합니다.
+        복습 시점은 <span class="text-primary-500">헤이보카</span>가 결정합니다.
       </h2>
       <p class="mt-6 max-w-prose text-body-lg text-sub text-pretty">
         수많은 학습 데이터로 학습된 기억 모델이, 단어마다 다음 복습 시점을 자동으로 계산합니다.
@@ -39,66 +78,98 @@ const days = [
           </dd>
         </div>
         <div>
-          <dt class="text-caption font-medium uppercase tracking-[0.12em] text-mute">약점 자동 진단</dt>
+          <dt class="text-caption font-medium uppercase tracking-[0.12em] text-mute">AI 추천</dt>
           <dd class="mt-2 text-body text-ink">
-            자주 틀리는 문제 유형을 추적해, 필요한 만큼 더 보여줍니다.
+            사용자 수준·학습 패턴 기반으로 단어장과 단어를 자동으로 추천합니다.
           </dd>
         </div>
         <div>
-          <dt class="text-caption font-medium uppercase tracking-[0.12em] text-mute">개인화</dt>
+          <dt class="text-caption font-medium uppercase tracking-[0.12em] text-mute">자체 사전</dt>
           <dd class="mt-2 text-body text-ink">
-            당신의 학습 패턴에 맞게 간격이 미세 조정됩니다.
+            단어 · 예문 · 복수 의미 · 발음을 직접 큐레이션해 제공합니다.
           </dd>
         </div>
         <div>
-          <dt class="text-caption font-medium uppercase tracking-[0.12em] text-mute">3개 플랫폼 동기화</dt>
+          <dt class="text-caption font-medium uppercase tracking-[0.12em] text-mute">5단계 암기 상태</dt>
           <dd class="mt-2 text-body text-ink">
-            iPhone에서 외운 단어를, 안드로이드에서, 웹에서 그대로.
+            미학습 → 단기 → 중기 → 장기, 복습 지연은 별도 관리.
           </dd>
         </div>
       </dl>
     </div>
 
-    {/* 우측: 타임라인 카드 + Lottie */}
+    {/* 우측: 5단계 암기 상태 진화 카드 */}
     <div class="lg:col-span-5" data-reveal>
       <div class="card relative overflow-hidden p-6 md:p-8">
         <div class="mb-6 flex items-center justify-between">
-          <p class="text-caption font-semibold uppercase tracking-[0.12em] text-mute">복습 타임라인</p>
-          <span class="text-caption text-mute">기억 모델 v5</span>
+          <p class="text-caption font-semibold uppercase tracking-[0.12em] text-mute">암기 상태 진화</p>
+          <span class="text-caption text-mute">5단계</span>
         </div>
 
         <div class="relative">
           {/* 세로 진행선 */}
-          <div class="absolute left-[15px] top-2 bottom-2 w-px bg-hairline" aria-hidden="true"></div>
+          <div class="absolute left-[19px] top-3 bottom-3 w-px bg-hairline" aria-hidden="true"></div>
           <ul class="space-y-5">
-            {days.map((d) => (
-              <li class="relative flex items-center gap-4">
-                <span class={`relative z-10 inline-flex h-[30px] w-[30px] items-center justify-center rounded-full border ${d.accent ? 'border-primary-500 bg-primary-100' : 'border-hairline bg-white'}`}>
-                  <span class={`h-2 w-2 rounded-full ${d.accent ? 'bg-primary-500 animate-pulse-ring' : 'bg-mute'}`}></span>
+            {memoryStates.map((s) => (
+              <li class="relative flex items-start gap-4">
+                <span
+                  class="relative z-10 inline-flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full border border-hairline bg-white"
+                  style={`color: ${s.color};`}
+                >
+                  <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 256 256"
+                    aria-hidden="true"
+                    set:html={s.icon}
+                  />
                 </span>
-                <div class="flex flex-1 items-center justify-between">
-                  <p class="text-body font-semibold text-ink">{d.d}</p>
-                  <p class="text-body-sm text-sub">{d.state}</p>
+                <div class="flex flex-1 flex-col pt-0.5">
+                  <div class="flex items-center gap-2">
+                    <p class="text-body font-semibold text-ink">{s.name}</p>
+                    <span
+                      class="inline-block h-1.5 w-1.5 rounded-full"
+                      style={`background-color: ${s.color};`}
+                      aria-hidden="true"
+                    ></span>
+                  </div>
+                  <p class="text-body-sm text-sub">{s.desc}</p>
                 </div>
               </li>
             ))}
           </ul>
         </div>
 
-        {/* 시각 보강: 기억 펄스 라인 */}
-        <div class="mt-6 flex h-16 items-center justify-between px-1" aria-hidden="true">
-          <span class="h-2.5 w-2.5 rounded-full bg-ink/80"></span>
-          <span class="h-px flex-1 bg-hairline"></span>
-          <span class="h-2.5 w-2.5 rounded-full bg-ink/40"></span>
-          <span class="h-px flex-1 bg-hairline"></span>
-          <span class="relative inline-flex h-4 w-4 items-center justify-center">
-            <span class="absolute h-4 w-4 rounded-full bg-primary-500/30 animate-pulse-ring"></span>
-            <span class="relative h-2.5 w-2.5 rounded-full bg-primary-500"></span>
-          </span>
-          <span class="h-px flex-1 bg-hairline"></span>
-          <span class="h-2.5 w-2.5 rounded-full bg-ink/30"></span>
-          <span class="h-px flex-1 bg-hairline"></span>
-          <span class="h-2.5 w-2.5 rounded-full bg-ink/20"></span>
+        {/* 별도 분기: 복습 지연 (점선 연결) */}
+        <div class="mt-6 border-t border-dashed border-hairline pt-5">
+          <p class="mb-3 text-caption font-semibold uppercase tracking-[0.12em] text-mute">
+            별도 분기
+          </p>
+          <div class="flex items-start gap-4">
+            <span
+              class="relative inline-flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full border border-dashed bg-white"
+              style={`color: ${overdueState.color}; border-color: ${overdueState.color};`}
+            >
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 256 256"
+                aria-hidden="true"
+                set:html={overdueState.icon}
+              />
+            </span>
+            <div class="flex flex-1 flex-col pt-0.5">
+              <div class="flex items-center gap-2">
+                <p class="text-body font-semibold text-ink">{overdueState.name}</p>
+                <span
+                  class="inline-block h-1.5 w-1.5 rounded-full"
+                  style={`background-color: ${overdueState.color};`}
+                  aria-hidden="true"
+                ></span>
+              </div>
+              <p class="text-body-sm text-sub">{overdueState.desc}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

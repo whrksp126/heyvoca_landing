@@ -1,0 +1,119 @@
+---
+// 자체 사전 섹션 — accomplish 단어 상세 카드 미니 mockup (순수 Astro).
+// heyvoca_front의 WordDetaileNewBottomSheet 미니 재현.
+
+const meanings = [
+  { pos: '동사', text: '성취하다, 이루다' },
+  { pos: '동사', text: '(일·임무를) 완수하다' },
+  { pos: '동사', text: '(목표를) 달성하다' },
+];
+
+const examples = [
+  {
+    en: 'She accomplished her goal of running a marathon.',
+    ko: '그녀는 마라톤을 완주하는 목표를 이뤘다.',
+  },
+  {
+    en: 'We accomplished the task ahead of schedule.',
+    ko: '우리는 일정보다 빨리 그 일을 완수했다.',
+  },
+];
+---
+
+<section class="section bg-white" aria-labelledby="dictionary-h2">
+  <div class="container-content grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
+    {/* 좌측: 카피 */}
+    <div data-reveal>
+      <span class="eyebrow">
+        <span class="h-1.5 w-1.5 rounded-full bg-primary-500"></span>
+        자체 사전
+      </span>
+      <h2
+        id="dictionary-h2"
+        class="mt-6 text-balance text-[36px] font-bold leading-[1.12] tracking-tight text-ink md:text-display-lg lg:text-display-xl"
+      >
+        자체 큐레이션한 사전,<br />
+        단어 한 개에 의미와 예문이 가득.
+      </h2>
+      <p class="mt-6 max-w-prose text-body-lg text-sub text-pretty">
+        단순한 영한 번역이 아닙니다.
+        단어마다 품사 · 복수 의미 · 자연스러운 예문 · 정확한 발음을 직접 큐레이션했습니다.
+        뜻이 여러 개라면, 그 모두를 보여줍니다.
+      </p>
+    </div>
+
+    {/* 우측: 단어 상세 카드 mockup */}
+    <div data-reveal>
+      <div class="card relative overflow-hidden p-6 md:p-8">
+        {/* 헤더: 단어 + 발음 + 스피커 + chip */}
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0 flex-1">
+            <p class="font-display text-[32px] font-bold leading-tight text-ink md:text-[40px]">
+              accomplish
+            </p>
+            <div class="mt-2 inline-flex items-center gap-3">
+              <span class="font-mono text-body-sm text-sub">/əˈkɑːmplɪʃ/</span>
+              <button
+                type="button"
+                class="inline-flex h-7 w-7 items-center justify-center rounded-full border border-hairline bg-white text-sub hover:border-primary-500 hover:text-primary-600"
+                aria-label="발음 듣기"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M11 5L6 9H2v6h4l5 4z" />
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <span class="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary-100 px-2.5 py-1 text-caption font-semibold text-primary-700">
+            <span class="h-1.5 w-1.5 rounded-full bg-primary-500"></span>
+            복수 의미 3개 · 예문 2개
+          </span>
+        </div>
+
+        {/* 의미 리스트 */}
+        <ul class="mt-6 space-y-2.5">
+          {meanings.map((m, i) => (
+            <li class="flex items-start gap-3">
+              <span class="mt-[2px] inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-surface text-[11px] font-semibold text-sub">
+                {i + 1}
+              </span>
+              <div class="flex flex-1 items-baseline gap-2">
+                <span class="rounded bg-primary-100 px-1.5 py-0.5 text-[11px] font-semibold text-primary-700">
+                  {m.pos}
+                </span>
+                <span class="text-body text-ink">{m.text}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        {/* 예문 */}
+        <div class="mt-7 hairline-t pt-6">
+          <p class="mb-3 text-caption font-semibold uppercase tracking-[0.12em] text-mute">
+            예문
+          </p>
+          <ul class="space-y-4">
+            {examples.map((ex) => (
+              <li class="rounded-field bg-surface p-4">
+                <p class="text-body font-medium text-ink">{ex.en}</p>
+                <p class="mt-1 text-body-sm text-sub">{ex.ko}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

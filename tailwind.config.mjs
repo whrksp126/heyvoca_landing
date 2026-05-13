@@ -21,6 +21,14 @@ export default {
           blue: '#2E90FA',
           amber: '#F79009',
         },
+        // 5단계 암기 상태 토큰 (heyvoca_front MemorizationStatus.jsx 출처)
+        memory: {
+          unlearned: '#9D835A',
+          leaf: '#77CE4F',
+          plant: '#38CE38',
+          carrot: '#F68300',
+          overdue: '#F26A6A',
+        },
       },
       fontFamily: {
         sans: [

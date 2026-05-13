@@ -1,10 +1,77 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Volume2, ArrowLeft, ArrowRight, ChevronDown, RotateCcw } from 'lucide-react';
-import { demoWords, type DemoWord } from '../../data/demoWords';
+import { Volume2, ArrowLeft, ArrowRight, ChevronDown, RotateCcw, Check, X } from 'lucide-react';
+import { EggCrack, Leaf, Plant, Carrot, Warning } from '@phosphor-icons/react';
+import {
+  demoWords,
+  memoryStatusMeta,
+  nextStatusOnBad,
+  nextStatusOnGood,
+  type DemoWord,
+  type MemoryStatus,
+} from '../../data/demoWords';
 
 const AUTO_ADVANCE_MS = 6500;
 const SPRING = { type: 'spring' as const, stiffness: 380, damping: 36 };
+
+// Phosphor 아이콘 매핑 — memoryStatusMeta.iconName 기준
+function StatusIcon({ name, size = 12, weight = 'fill' }: { name: string; size?: number; weight?: 'fill' | 'regular' }) {
+  switch (name) {
+    case 'EggCrack':
+      return <EggCrack size={size} weight={weight} aria-hidden />;
+    case 'Leaf':
+      return <Leaf size={size} weight={weight} aria-hidden />;
+    case 'Plant':
+      return <Plant size={size} weight={weight} aria-hidden />;
+    case 'Carrot':
+      return <Carrot size={size} weight={weight} aria-hidden />;
+    case 'Warning':
+      return <Warning size={size} weight={weight} aria-hidden />;
+    default:
+      return null;
+  }
+}
+
+// 상태 뱃지 — Framer Motion으로 색상/아이콘 부드럽게 전이
+function StatusBadge({ status }: { status: MemoryStatus }) {
+  const meta = memoryStatusMeta[status];
+  return (
+    <motion.span
+      layout
+      transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+      className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold"
+      style={{
+        borderColor: meta.color,
+        backgroundColor: meta.bgColor,
+        color: meta.color,
+      }}
+    >
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.span
+          key={status}
+          initial={{ opacity: 0, scale: 0.6, rotate: -12 }}
+          animate={{ opacity: 1, scale: 1, rotate: 0 }}
+          exit={{ opacity: 0, scale: 0.6, rotate: 12 }}
+          transition={{ duration: 0.25 }}
+          className="flex h-3 w-3 items-center justify-center"
+        >
+          <StatusIcon name={meta.iconName} size={12} weight="fill" />
+        </motion.span>
+      </AnimatePresence>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.span
+          key={`${status}-label`}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.2 }}
+        >
+          {meta.label}
+        </motion.span>
+      </AnimatePresence>
+    </motion.span>
+  );
+}
 
 function speak(text: string) {
   try {
@@ -18,34 +85,28 @@ function speak(text: string) {
   } catch {}
 }
 
-function CardFace({ word, revealed, onReveal, onSpeak }: {
+function CardFace({
+  word,
+  status,
+  revealed,
+  onReveal,
+  onSpeak,
+}: {
   word: DemoWord;
+  status: MemoryStatus;
   revealed: boolean;
   onReveal: () => void;
   onSpeak: () => void;
 }) {
   return (
     <div className="flex h-full w-full flex-col">
-      {/* Badge */}
+      {/* 상단: 5단계 상태 뱃지 + 품사 */}
       <div className="flex items-center justify-between">
-        <span
-          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-            word.badge.tone === 'review'
-              ? 'bg-primary-100 text-primary-700'
-              : 'bg-surface text-sub'
-          }`}
-        >
-          <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              word.badge.tone === 'review' ? 'bg-primary-500' : 'bg-mute'
-            }`}
-          />
-          {word.badge.label}
-        </span>
+        <StatusBadge status={status} />
         <span className="text-[11px] font-medium text-mute">{word.pos}</span>
       </div>
 
-      {/* Word + speaker */}
+      {/* 단어 + 발음 버튼 */}
       <div className="mt-6 flex items-start gap-3">
         <h3 className="font-mono text-[34px] font-bold leading-tight tracking-tight text-ink md:text-[40px]">
           {word.word}
@@ -61,7 +122,7 @@ function CardFace({ word, revealed, onReveal, onSpeak }: {
       </div>
       <p className="mt-1 text-body-sm text-mute">{word.ipa}</p>
 
-      {/* Meaning reveal */}
+      {/* 뜻 펼치기 */}
       <button
         type="button"
         onClick={onReveal}
@@ -101,8 +162,36 @@ function CardFace({ word, revealed, onReveal, onSpeak }: {
   );
 }
 
-export default function StudyCardDemo({ onMetricsChange }: {
-  onMetricsChange?: (m: { index: number; revealedCount: number; doneCount: number; reviewSeen: number; newSeen: number }) => void;
+// 상태별 카운트 집계
+function countByStatus(statusMap: Record<number, MemoryStatus>): Record<MemoryStatus, number> {
+  const acc: Record<MemoryStatus, number> = {
+    unlearned: 0,
+    leaf: 0,
+    plant: 0,
+    carrot: 0,
+    overdue: 0,
+  };
+  Object.values(statusMap).forEach((s) => {
+    acc[s] = (acc[s] ?? 0) + 1;
+  });
+  return acc;
+}
+
+export interface StudyCardMetrics {
+  index: number;
+  revealedCount: number;
+  doneCount: number;
+  // 기존 호환 필드
+  reviewSeen: number;
+  newSeen: number;
+  // 5단계 카운터 (각 카드의 현재 상태 기준)
+  statusCounts: Record<MemoryStatus, number>;
+}
+
+export default function StudyCardDemo({
+  onMetricsChange,
+}: {
+  onMetricsChange?: (m: StudyCardMetrics) => void;
 }) {
   const [index, setIndex] = useState(0);
   const [revealedMap, setRevealedMap] = useState<Record<number, boolean>>({});
@@ -110,12 +199,21 @@ export default function StudyCardDemo({ onMetricsChange }: {
   const [paused, setPaused] = useState(false);
   const [direction, setDirection] = useState<1 | -1>(1);
   const [hasEntered, setHasEntered] = useState(false);
+
+  // 각 카드의 현재 상태 (초기값은 demoWords의 status)
+  const [statusMap, setStatusMap] = useState<Record<number, MemoryStatus>>(() =>
+    demoWords.reduce<Record<number, MemoryStatus>>((acc, w, i) => {
+      acc[i] = w.status;
+      return acc;
+    }, {}),
+  );
+
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const dragStartX = useRef<number | null>(null);
 
   const word = demoWords[index];
+  const currentStatus = statusMap[index] ?? word.status;
 
-  // Viewport-enter: 첫 진입 시 자동 진행 시작
+  // 뷰포트 진입 감지
   useEffect(() => {
     if (!rootRef.current) return;
     const obs = new IntersectionObserver(
@@ -127,13 +225,13 @@ export default function StudyCardDemo({ onMetricsChange }: {
           }
         });
       },
-      { threshold: 0.4 }
+      { threshold: 0.4 },
     );
     obs.observe(rootRef.current);
     return () => obs.disconnect();
   }, []);
 
-  // 자동 진행
+  // 자동 진행 (수동 조작 시 일시정지)
   useEffect(() => {
     if (!hasEntered || paused) return;
     const reduced =
@@ -162,7 +260,7 @@ export default function StudyCardDemo({ onMetricsChange }: {
     });
   }, []);
 
-  // Notify metrics
+  // 메트릭 알림
   useEffect(() => {
     const revealedCount = Object.values(revealedMap).filter(Boolean).length;
     let reviewSeen = 0;
@@ -177,8 +275,9 @@ export default function StudyCardDemo({ onMetricsChange }: {
       doneCount: doneSet.size,
       reviewSeen,
       newSeen,
+      statusCounts: countByStatus(statusMap),
     });
-  }, [index, revealedMap, doneSet, onMetricsChange]);
+  }, [index, revealedMap, doneSet, statusMap, onMetricsChange]);
 
   const next = () => {
     setPaused(true);
@@ -201,9 +300,28 @@ export default function StudyCardDemo({ onMetricsChange }: {
     setDoneSet(new Set());
     setPaused(false);
     setDirection(1);
+    // 상태도 초기 데이터로 복원
+    setStatusMap(
+      demoWords.reduce<Record<number, MemoryStatus>>((acc, w, i) => {
+        acc[i] = w.status;
+        return acc;
+      }, {}),
+    );
   };
 
-  // Keyboard
+  // 모르겠음 / 완벽 — 상태 전이
+  const handleAnswer = (good: boolean) => {
+    setPaused(true);
+    setStatusMap((prev) => {
+      const cur = prev[index] ?? demoWords[index].status;
+      const nextStatus = good ? nextStatusOnGood(cur) : nextStatusOnBad(cur);
+      if (cur === nextStatus) return prev;
+      return { ...prev, [index]: nextStatus };
+    });
+    markDone(index);
+  };
+
+  // 키보드 단축키
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.target instanceof HTMLElement && ['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
@@ -231,32 +349,40 @@ export default function StudyCardDemo({ onMetricsChange }: {
   const isLast = index === demoWords.length - 1;
   const isDoneAll = doneSet.size === demoWords.length;
 
+  // 카드별 강조 색 (뱃지 색상을 progress 바 등에 살짝 반영)
+  const statusColor = useMemo(() => memoryStatusMeta[currentStatus].color, [currentStatus]);
+
   return (
     <div ref={rootRef} className="relative">
-      {/* Phone shell */}
+      {/* iPhone 프레임 */}
       <div className="relative mx-auto w-full max-w-[360px]">
         <div className="rounded-[44px] bg-ink p-[6px] shadow-card">
           <div className="relative overflow-hidden rounded-[38px] bg-white">
             {/* dynamic island */}
             <div className="absolute left-1/2 top-3 z-20 h-[22px] w-[88px] -translate-x-1/2 rounded-full bg-ink" />
 
-            {/* status bar */}
+            {/* 상단 상태 표시줄 */}
             <div className="flex items-center justify-between px-7 pt-2 text-[10px] font-semibold text-ink">
               <span>9:41</span>
               <span>●●●●</span>
             </div>
 
-            {/* progress bar */}
+            {/* 진행 바 */}
             <div className="px-5 pt-6">
               <div className="flex items-center justify-between text-[11px] font-semibold text-sub">
                 <span>오늘의 학습</span>
-                <span aria-live="polite">{index + 1} / {demoWords.length}</span>
+                <span aria-live="polite">
+                  {index + 1} / {demoWords.length}
+                </span>
               </div>
               <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-hairline">
                 <motion.div
-                  className="h-full rounded-full bg-primary-500"
+                  className="h-full rounded-full"
                   initial={false}
-                  animate={{ width: `${((index + 1) / demoWords.length) * 100}%` }}
+                  animate={{
+                    width: `${((index + 1) / demoWords.length) * 100}%`,
+                    backgroundColor: statusColor,
+                  }}
                   transition={SPRING}
                   role="progressbar"
                   aria-valuemin={0}
@@ -266,7 +392,7 @@ export default function StudyCardDemo({ onMetricsChange }: {
               </div>
             </div>
 
-            {/* card stage */}
+            {/* 카드 영역 */}
             <div className="relative h-[400px] overflow-hidden px-5 py-6">
               <AnimatePresence custom={direction} mode="wait" initial={false}>
                 <motion.div
@@ -284,6 +410,7 @@ export default function StudyCardDemo({ onMetricsChange }: {
                 >
                   <CardFace
                     word={word}
+                    status={currentStatus}
                     revealed={!!revealedMap[index]}
                     onReveal={handleReveal}
                     onSpeak={() => speak(word.word)}
@@ -292,7 +419,29 @@ export default function StudyCardDemo({ onMetricsChange }: {
               </AnimatePresence>
             </div>
 
-            {/* controls */}
+            {/* 정답/오답 액션 버튼 */}
+            <div className="grid grid-cols-2 gap-2 border-t border-hairline px-5 py-3">
+              <button
+                type="button"
+                onClick={() => handleAnswer(false)}
+                aria-label="모르겠음"
+                className="inline-flex h-11 items-center justify-center gap-1.5 rounded-full bg-surface text-[13px] font-semibold text-sub transition hover:bg-hairline focus-visible:shadow-ring"
+              >
+                <X size={14} aria-hidden />
+                모르겠음
+              </button>
+              <button
+                type="button"
+                onClick={() => handleAnswer(true)}
+                aria-label="완벽"
+                className="inline-flex h-11 items-center justify-center gap-1.5 rounded-full bg-ink text-[13px] font-semibold text-white transition hover:bg-primary-600 focus-visible:shadow-ring"
+              >
+                <Check size={14} aria-hidden />
+                완벽
+              </button>
+            </div>
+
+            {/* 컨트롤 (이전/다음 + 페이지 점) */}
             <div className="flex items-center justify-between gap-2 border-t border-hairline px-5 py-4">
               <button
                 type="button"
@@ -341,9 +490,9 @@ export default function StudyCardDemo({ onMetricsChange }: {
         </div>
       </div>
 
-      {/* helper hint */}
+      {/* 안내 문구 */}
       <p className="mt-4 text-center text-caption text-mute">
-        스와이프 · 키보드 ←/→ 로 카드를 넘길 수 있어요.
+        모르겠음 · 완벽 버튼으로 암기 상태가 단계별로 진행돼요. 스와이프 · 키보드 ←/→ 도 가능.
       </p>
     </div>
   );

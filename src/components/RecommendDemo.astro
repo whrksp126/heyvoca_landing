@@ -1,0 +1,31 @@
+---
+// AI 추천 데모 — React island 마운트만 담당.
+// TestRecommendDemo.tsx는 Agent 2가 작성/덮어쓰는 컴포넌트.
+import TestRecommendDemo from './demo/TestRecommendDemo';
+---
+
+<section class="section bg-surface hairline-t hairline-b" aria-labelledby="recommend-h2">
+  <div class="container-content">
+    <div class="max-w-3xl" data-reveal>
+      <span class="eyebrow">
+        <span class="h-1.5 w-1.5 rounded-full bg-primary-500"></span>
+        AI 추천
+      </span>
+      <h2
+        id="recommend-h2"
+        class="mt-6 text-balance text-[36px] font-bold leading-[1.12] tracking-tight text-ink md:text-display-lg lg:text-display-xl"
+      >
+        당신의 수준과 학습 패턴,<br />
+        헤이보카가 읽습니다.
+      </h2>
+      <p class="mt-6 max-w-prose text-body-lg text-sub text-pretty">
+        레벨, 학습 시간대, 집중력 분포를 분석해 가장 잘 맞는 단어장을 자동으로 추천합니다.
+        새 단어장을 직접 고를 필요가 없습니다.
+      </p>
+    </div>
+
+    <div class="mt-14" data-reveal>
+      <TestRecommendDemo client:visible />
+    </div>
+  </div>
+</section>
