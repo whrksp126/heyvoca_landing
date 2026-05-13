@@ -1,0 +1,29 @@
+---
+import TestDemoPanel from './demo/TestDemoPanel.tsx';
+---
+
+<section id="recommend-test" class="section bg-surface" aria-labelledby="recommend-test-h2">
+  <div class="container-content">
+    <div class="max-w-3xl" data-reveal>
+      <span class="eyebrow">
+        <span class="h-1.5 w-1.5 rounded-full bg-primary-500"></span>
+        AI 추천 테스트 미리 체험
+      </span>
+      <h2
+        id="recommend-test-h2"
+        class="mt-6 text-balance text-[36px] font-bold leading-[1.12] tracking-tight text-ink md:text-display-lg lg:text-display-xl"
+      >
+        시스템이 알아서 척척.<br />
+        지금 내게 꼭 필요한 단어로.
+      </h2>
+      <p class="mt-6 max-w-prose text-body-lg text-sub text-pretty">
+        4지선다 · 듣기 · 빈칸 채우기 · 카드 매칭 — 5가지 문제 유형이 섞여 14문제가 출제됩니다.
+        오른쪽 패널이 풀이 진행과 단어별 단계 진화를 실시간 반영해요.
+      </p>
+    </div>
+
+    <div class="mt-14" data-reveal>
+      <TestDemoPanel client:only="react" />
+    </div>
+  </div>
+</section>

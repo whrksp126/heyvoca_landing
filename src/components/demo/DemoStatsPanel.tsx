@@ -111,9 +111,16 @@ function WordEvolutionMap({
 }) {
   const order: MemoryStatus[] = [...memoryStatusOrder]; // 4단계
   const idxOf = (s: MemoryStatus) => order.indexOf(s);
+  const listRef = useRef<HTMLUListElement | null>(null);
+
+  // 현재 단어로 자동 스크롤
+  useEffect(() => {
+    const el = listRef.current?.querySelector<HTMLElement>(`[data-word-idx="${currentIndex}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [currentIndex]);
 
   return (
-    <ul className="space-y-3">
+    <ul ref={listRef} className="max-h-[420px] space-y-3 overflow-y-auto pr-1">
       {demoWords.map((w, i) => {
         const status = statusByWord[i] ?? w.status;
         const isOverdue = status === 'overdue';
@@ -123,9 +130,10 @@ function WordEvolutionMap({
 
         return (
           <li
-            key={w.word}
+            key={w.id}
+            data-word-idx={i}
             className={`rounded-xl px-3 py-2.5 transition-colors ${
-              isCurrent ? 'bg-primary-50 ring-1 ring-primary-200' : 'bg-white'
+              isCurrent ? 'bg-primary-100/40 ring-1 ring-primary-500/30' : 'bg-white'
             }`}
           >
             <div className="flex items-center justify-between gap-3">

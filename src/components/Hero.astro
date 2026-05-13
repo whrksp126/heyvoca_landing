@@ -69,7 +69,7 @@
           <circle cx="14" cy="64" r="2" fill="currentColor" opacity="0.5" />
         </svg>
 
-        {/* iPhone frame mockup — 실제 앱 StudyMain.jsx 디자인 미니어처 */}
+        {/* iPhone frame mockup — 실서비스 StudyMain.jsx 디자인 100% 일치 (75% 스케일) */}
         <div class="relative mx-auto aspect-[9/19] w-[280px] md:w-[300px]">
           <div class="absolute inset-0 rounded-[42px] bg-ink p-[6px] shadow-card">
             <div class="relative h-full w-full overflow-hidden rounded-[36px] bg-white">
@@ -83,58 +83,84 @@
                   <span>●●●●</span>
                 </div>
 
-                {/* 헤더 */}
-                <div class="flex items-center justify-between px-5 pt-7">
-                  <span class="text-[12px] font-semibold text-ink">오늘의 학습</span>
-                  <span class="text-[10px] font-semibold text-mute">12 / 30</span>
+                {/* StudyHeader (뒤로가기 + 설정) — 비율 맞춰 단순화 */}
+                <div class="flex items-center justify-between px-[15px] pt-6">
+                  <svg width="14" height="14" viewBox="0 0 256 256" fill="#0A0A0A" aria-hidden="true">
+                    <path d="M165.66 202.34a8 8 0 0 1-11.32 11.32l-80-80a8 8 0 0 1 0-11.32l80-80a8 8 0 0 1 11.32 11.32L91.31 128Z"/>
+                  </svg>
+                  <svg width="14" height="14" viewBox="0 0 256 256" fill="#0A0A0A" aria-hidden="true">
+                    <path d="M128 80a48 48 0 1 0 48 48 48.05 48.05 0 0 0-48-48Zm0 80a32 32 0 1 1 32-32 32 32 0 0 1-32 32Zm88.71-44.45-23.62-9.4a96.16 96.16 0 0 0-4-9.65l5.26-25.39a8 8 0 0 0-2.15-7.49l-20.84-20.84a8 8 0 0 0-7.49-2.15l-25.39 5.26a96.16 96.16 0 0 0-9.65-4l-9.4-23.62a8 8 0 0 0-7.43-5h-29.49a8 8 0 0 0-7.43 5l-9.4 23.62a96.16 96.16 0 0 0-9.65 4L40.65 30.63a8 8 0 0 0-7.49 2.15L12.32 53.62a8 8 0 0 0-2.15 7.49l5.26 25.39a96.16 96.16 0 0 0-4 9.65l-23.62 9.4Z"/>
+                  </svg>
                 </div>
 
-                {/* 프로그레스 바 (실제 앱: 16px 높이) */}
-                <div class="mt-2 px-5">
-                  <div class="relative h-[10px] w-full overflow-hidden rounded-full bg-primary-100">
-                    <div class="h-full rounded-full bg-primary-500" style="width: 40%;"></div>
+                {/* 프로그레스 바 — 실서비스: h-[16px] bg-primary-main-100 → bg-primary-main-600 */}
+                <div class="mt-[5px] px-[15px]">
+                  <div class="relative h-[12px] w-full overflow-hidden rounded-[50px] bg-primary-100">
+                    <div class="h-full rounded-[50px] bg-primary-500" style="width: 85.7%;"></div>
+                    <span class="absolute right-[8px] top-1/2 -translate-y-1/2 text-[7px] font-semibold text-[#7b7b7b]" style="letter-spacing: -0.2px;">12/14</span>
                   </div>
                 </div>
 
-                {/* 카드 영역 — 실제 앱: bg-layout-gray-50 rounded-[12px] */}
-                <div class="mt-3 mx-5 flex-1 rounded-[12px] bg-[#F5F5F5] p-4">
-                  <div class="flex flex-col gap-3">
-                    {/* 암기 상태 배지 — 단기암기 (Leaf) */}
-                    <span class="inline-flex w-fit items-center gap-1 rounded-full border border-[#77CE4F]/30 bg-white px-2 py-0.5 text-[10px] font-semibold" style="color: #77CE4F;">
-                      <svg width="11" height="11" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
-                        <path d="M223.5 32h-72A104.6 104.6 0 0 0 47 136.5a103.66 103.66 0 0 0 21.5 63.27L43.05 225.21a8 8 0 0 0 11.32 11.32l25.41-25.41A103.66 103.66 0 0 0 143 232.55a104.59 104.59 0 0 0 104.5-104.5v-88a8 8 0 0 0-8-8.05Z"/>
-                      </svg>
-                      단기암기
-                    </span>
+                {/* 카드 영역 — 실서비스: bg-layout-gray-50 #F5F5F5, rounded-[12px], p-[20px], gap-[25px] */}
+                <div class="mt-[12px] mx-[15px] flex-1 overflow-hidden rounded-[12px] bg-[#F5F5F5] p-[15px]">
+                  <div class="flex flex-col gap-[18px]">
+                    {/* 상단: 암기 상태 뱃지 + 단어 */}
+                    <div class="flex flex-col gap-[4px]">
+                      {/* MemorizationStatus 뱃지 — 단기암기 (Leaf), 실서비스 색상 그대로 */}
+                      <span class="inline-flex w-fit items-center gap-[3px] py-[2px] px-[4px] rounded-[50px] border text-[7px] font-semibold"
+                            style="color: #77CE4F; border-color: #77CE4F; background-color: #F2FFEB;">
+                        <svg width="8" height="8" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
+                          <path d="M223.5 32h-72A104.6 104.6 0 0 0 47 136.5a103.66 103.66 0 0 0 21.5 63.27L43.05 225.21a8 8 0 0 0 11.32 11.32l25.41-25.41A103.66 103.66 0 0 0 143 232.55a104.59 104.59 0 0 0 104.5-104.5v-88a8 8 0 0 0-8-8.05Z"/>
+                        </svg>
+                        단기암기
+                      </span>
 
-                    {/* 단어 + 스피커 */}
-                    <div class="flex items-start justify-between gap-1">
-                      <span class="font-mono text-[19px] font-bold leading-tight text-ink">serendipity</span>
-                      <svg width="13" height="13" viewBox="0 0 256 256" fill="#C5C5C5" class="mt-1 shrink-0" aria-hidden="true">
-                        <path d="M155.51 24.81a8 8 0 0 0-8.42.88L77.25 80H32a16 16 0 0 0-16 16v64a16 16 0 0 0 16 16h45.25l69.84 54.31A8 8 0 0 0 160 224V32a8 8 0 0 0-4.49-7.19Z"/>
-                      </svg>
+                      {/* 단어 + 스피커 */}
+                      <div class="flex items-start justify-between gap-[4px]">
+                        <span class="text-[18px] font-bold leading-[22px] text-ink">serendipity</span>
+                        <button type="button" class="py-[2px]" aria-label="serendipity 발음 듣기">
+                          <svg width="12" height="12" viewBox="0 0 256 256" fill="#C5C5C5" aria-hidden="true">
+                            <path d="M155.51 24.81a8 8 0 0 0-8.42.88L77.25 80H32a16 16 0 0 0-16 16v64a16 16 0 0 0 16 16h45.25l69.84 54.31A8 8 0 0 0 160 224V32a8 8 0 0 0-4.49-7.19Z"/>
+                          </svg>
+                        </button>
+                      </div>
                     </div>
 
-                    {/* IPA */}
-                    <p class="-mt-2 text-[10px] text-mute">/ˌserənˈdɪpəti/</p>
+                    {/* 의미 — 실서비스: text-[13px] font-[400] (75% 스케일 → 10px) */}
+                    <div class="flex flex-col gap-[3px]">
+                      <div class="flex items-center justify-between gap-[6px]">
+                        <span class="flex-1 text-[10px] font-normal text-[#5C5C5C]">행운</span>
+                        <svg width="12" height="12" viewBox="0 0 256 256" fill="#C5C5C5" aria-hidden="true">
+                          <path d="M155.51 24.81a8 8 0 0 0-8.42.88L77.25 80H32a16 16 0 0 0-16 16v64a16 16 0 0 0 16 16h45.25l69.84 54.31A8 8 0 0 0 160 224V32a8 8 0 0 0-4.49-7.19Z"/>
+                        </svg>
+                      </div>
+                      <div class="flex items-center justify-between gap-[6px]">
+                        <span class="flex-1 text-[10px] font-normal text-[#5C5C5C]">뜻밖의 발견</span>
+                        <svg width="12" height="12" viewBox="0 0 256 256" fill="#C5C5C5" aria-hidden="true">
+                          <path d="M155.51 24.81a8 8 0 0 0-8.42.88L77.25 80H32a16 16 0 0 0-16 16v64a16 16 0 0 0 16 16h45.25l69.84 54.31A8 8 0 0 0 160 224V32a8 8 0 0 0-4.49-7.19Z"/>
+                        </svg>
+                      </div>
+                    </div>
 
-                    {/* 의미 (실제 앱: 작은 폰트, gray-600) */}
-                    <p class="text-[11px] text-sub">뜻밖의 행운, 우연한 발견</p>
-
-                    {/* 예문 영역 */}
-                    <div class="mt-1 flex flex-col gap-1.5">
-                      <p class="text-[10px] font-bold text-ink">예문</p>
-                      <p class="text-[10px] text-ink">A series of serendipities led to her career.</p>
-                      <p class="text-[10px] text-mute">연속된 우연이 그녀의 커리어로 이어졌다.</p>
+                    {/* 예문 영역 — 실서비스: 라벨 text-[14px] font-[700], 본문 text-[14px] font-[400] */}
+                    <div class="flex flex-col gap-[6px]">
+                      <p class="text-[11px] font-bold text-ink">예문</p>
+                      <div class="flex items-start justify-between gap-[4px]">
+                        <span class="flex-1 text-[11px] font-normal text-ink leading-[14px]">Their meeting was a result of pure serendipity.</span>
+                        <svg width="12" height="12" viewBox="0 0 256 256" fill="#C5C5C5" class="mt-[1px] shrink-0" aria-hidden="true">
+                          <path d="M155.51 24.81a8 8 0 0 0-8.42.88L77.25 80H32a16 16 0 0 0-16 16v64a16 16 0 0 0 16 16h45.25l69.84 54.31A8 8 0 0 0 160 224V32a8 8 0 0 0-4.49-7.19Z"/>
+                        </svg>
+                      </div>
+                      <span class="text-[10px] font-normal text-[#7b7b7b] leading-[13px]">그들의 만남은 순전한 우연한 행운의 결과였다.</span>
                     </div>
                   </div>
                 </div>
 
-                {/* 하단 3버튼 — 실제 앱: 이전 / 재생 / 다음 */}
-                <div class="flex gap-2 px-5 py-4">
-                  <div class="flex h-9 flex-1 items-center justify-center rounded-lg bg-[#F0F0F0] text-[11px] font-bold text-[#C5C5C5]">이전</div>
-                  <div class="flex h-9 flex-1 items-center justify-center rounded-lg bg-[#C5C5C5] text-[11px] font-bold text-white">재생</div>
-                  <div class="flex h-9 flex-1 items-center justify-center rounded-lg bg-[#C5C5C5] text-[11px] font-bold text-white">다음</div>
+                {/* 하단 3버튼 — 실서비스: h-[45px] rounded-[8px] text-[16px] font-[700] (75%: ~34px, 12px) */}
+                <div class="flex gap-[6px] px-[15px] pt-[15px] pb-[15px]">
+                  <div class="flex h-[34px] flex-1 items-center justify-center rounded-[8px] bg-[#F0F0F0] text-[12px] font-bold text-[#C5C5C5]">이전</div>
+                  <div class="flex h-[34px] flex-1 items-center justify-center rounded-[8px] bg-[#C5C5C5] text-[12px] font-bold text-white">재생</div>
+                  <div class="flex h-[34px] flex-1 items-center justify-center rounded-[8px] bg-[#C5C5C5] text-[12px] font-bold text-white">다음</div>
                 </div>
               </div>
             </div>
