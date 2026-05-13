@@ -16,3 +16,9 @@ export const dictionaryStats = {
 export const dictWordCount: string = '4,680+';
 export const dictExampleCount: string = '23,000+';
 export const dictAvgMeanings: string = '2.8개';
+
+// 서점 단어장 개수 (백엔드 AdminVocaBook 기준, 수동 갱신)
+export const bookstoreBookCount: string = '30+';
+
+// 누적 서비스 사용자 (정식 서비스 시작 이후)
+export const cumulativeUsers: string = '1,000+';

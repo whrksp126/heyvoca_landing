@@ -1,15 +1,10 @@
 import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkle, Star } from '@phosphor-icons/react';
-import {
-  demoVocaBooks,
-  scoreVocaBook,
-  type DemoVocaBook,
-} from '../../data/demoVocaBooks';
+import { Sparkle } from '@phosphor-icons/react';
+import { demoVocaBooks, type DemoVocaBook } from '../../data/demoVocaBooks';
 
 type UserLevel = 1 | 2 | 3;
-type Pattern = 'morning' | 'evening' | 'weekend';
-type Duration = 5 | 15 | 30;
+type Pos = 'noun' | 'verb' | 'adj' | 'adv';
 
 const levelLabels: Record<UserLevel, string> = {
   1: '초급',
@@ -17,46 +12,93 @@ const levelLabels: Record<UserLevel, string> = {
   3: '상급',
 };
 
-const patternLabels: { id: Pattern; label: string; emoji?: string }[] = [
-  { id: 'morning', label: '아침형' },
-  { id: 'evening', label: '저녁형' },
-  { id: 'weekend', label: '주말 집중' },
-];
+const posMeta: Record<Pos, { label: string; color: string }> = {
+  noun: { label: '명사', color: '#74D5FF' },
+  verb: { label: '동사', color: '#FF70D4' },
+  adj: { label: '형용사', color: '#42F98B' },
+  adv: { label: '부사', color: '#FFBD3C' },
+};
 
-const durationOptions: { id: Duration; label: string }[] = [
-  { id: 5, label: '하루 5분' },
-  { id: 15, label: '하루 15분' },
-  { id: 30, label: '하루 30분' },
-];
+// 단어장별 품사 비중 (대략적 추정 — 사용자 시각화 데모용)
+const bookPosBias: Record<string, Record<Pos, number>> = {
+  'toeic-basic':     { noun: 0.40, verb: 0.30, adj: 0.20, adv: 0.10 },
+  'toeic-advanced':  { noun: 0.42, verb: 0.33, adj: 0.17, adv: 0.08 },
+  'suneung-core':    { noun: 0.30, verb: 0.30, adj: 0.25, adv: 0.15 },
+  'suneung-deep':    { noun: 0.28, verb: 0.25, adj: 0.32, adv: 0.15 },
+  'biz-english':     { noun: 0.25, verb: 0.50, adj: 0.15, adv: 0.10 },
+  'daily-talk':      { noun: 0.25, verb: 0.45, adj: 0.20, adv: 0.10 },
+  'ielts-academic':  { noun: 0.45, verb: 0.25, adj: 0.20, adv: 0.10 },
+  'reading-news':    { noun: 0.35, verb: 0.20, adj: 0.30, adv: 0.15 },
+};
 
-// 별점 (0~1 점수를 5점 만점 별로 시각화)
-function MatchStars({ score }: { score: number }) {
-  const stars = Math.round(score * 5);
+const ACCURACY_STEPS = [55, 70, 85, 95] as const;
+type Accuracy = (typeof ACCURACY_STEPS)[number];
+
+function cycleAccuracy(current: Accuracy): Accuracy {
+  const idx = ACCURACY_STEPS.indexOf(current);
+  return ACCURACY_STEPS[(idx + 1) % ACCURACY_STEPS.length];
+}
+
+// 정답률 막대 — 클릭 시 다음 단계로 순환
+function AccuracyBar({
+  pos,
+  value,
+  isWeakest,
+  onClick,
+}: {
+  pos: Pos;
+  value: Accuracy;
+  isWeakest: boolean;
+  onClick: () => void;
+}) {
+  const meta = posMeta[pos];
   return (
-    <span className="inline-flex items-center gap-0.5" aria-label={`매치도 ${stars} / 5`}>
-      {[0, 1, 2, 3, 4].map((i) => (
-        <Star
-          key={i}
-          size={11}
-          weight={i < stars ? 'fill' : 'regular'}
-          className={i < stars ? 'text-primary-500' : 'text-hairline'}
-          aria-hidden
+    <button
+      type="button"
+      onClick={onClick}
+      className="group block w-full text-left transition focus-visible:shadow-ring"
+      aria-label={`${meta.label} 정답률 ${value}% — 클릭하여 변경`}
+    >
+      <div className="flex items-center justify-between text-[12px]">
+        <span className="flex items-center gap-1.5 font-semibold text-ink">
+          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: meta.color }} aria-hidden />
+          {meta.label}
+          {isWeakest && (
+            <span className="ml-1 inline-flex rounded-full bg-red-50 px-1.5 py-0.5 text-[9px] font-bold text-red-500">
+              약점
+            </span>
+          )}
+        </span>
+        <span className="tabular-nums font-semibold text-sub">{value}%</span>
+      </div>
+      <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-surface">
+        <motion.div
+          className="h-full rounded-full"
+          style={{ backgroundColor: meta.color }}
+          initial={false}
+          animate={{ width: `${value}%` }}
+          transition={{ type: 'spring', stiffness: 320, damping: 30 }}
         />
-      ))}
-    </span>
+      </div>
+    </button>
   );
 }
 
-// 단어장 카드
 function BookCard({
   book,
   score,
   rank,
+  weakness,
 }: {
   book: DemoVocaBook;
   score: number;
   rank: number;
+  weakness: Pos;
 }) {
+  const bias = bookPosBias[book.id] ?? { noun: 0.25, verb: 0.25, adj: 0.25, adv: 0.25 };
+  const weakRatio = Math.round(bias[weakness] * 100);
+  const weakMeta = posMeta[weakness];
+
   return (
     <motion.div
       layout
@@ -67,7 +109,6 @@ function BookCard({
       transition={{ type: 'spring', stiffness: 320, damping: 30 }}
       className="relative flex gap-3 rounded-2xl border border-hairline bg-white p-3 shadow-raise"
     >
-      {/* 추천 뱃지 (상위 1개에만) */}
       {rank === 0 && (
         <span className="absolute -top-2 left-3 inline-flex items-center gap-1 rounded-full bg-primary-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-card">
           <Sparkle size={10} weight="fill" aria-hidden />
@@ -75,20 +116,13 @@ function BookCard({
         </span>
       )}
 
-      {/* 표지 */}
       <div
         className="flex h-20 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl"
         style={{ backgroundColor: `${book.color}22` }}
       >
-        <img
-          src={book.coverImage}
-          alt=""
-          className="h-full w-full object-cover"
-          loading="lazy"
-        />
+        <img src={book.coverImage} alt="" className="h-full w-full object-cover" loading="lazy" />
       </div>
 
-      {/* 정보 */}
       <div className="flex flex-1 flex-col">
         <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: book.color }}>
           {book.category}
@@ -97,8 +131,13 @@ function BookCard({
         <p className="mt-0.5 text-caption text-mute">
           {book.wordCount.toLocaleString()}단어 · {levelLabels[book.level]}
         </p>
-        <div className="mt-1.5 flex items-center justify-between">
-          <MatchStars score={score} />
+        <div className="mt-1.5 flex items-center justify-between gap-2">
+          <span
+            className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
+            style={{ backgroundColor: `${weakMeta.color}26`, color: weakMeta.color }}
+          >
+            {weakMeta.label} {weakRatio}%
+          </span>
           <span className="text-[11px] font-semibold tabular-nums text-sub">
             {Math.round(score * 100)}%
           </span>
@@ -108,7 +147,6 @@ function BookCard({
   );
 }
 
-// 작은 컨트롤 칩
 function ChipButton({
   active,
   onClick,
@@ -123,9 +161,7 @@ function ChipButton({
       type="button"
       onClick={onClick}
       className={`rounded-full px-3 py-1.5 text-[12px] font-semibold transition focus-visible:shadow-ring ${
-        active
-          ? 'bg-ink text-white'
-          : 'bg-surface text-sub hover:bg-hairline'
+        active ? 'bg-ink text-white' : 'bg-surface text-sub hover:bg-hairline'
       }`}
     >
       {children}
@@ -135,28 +171,39 @@ function ChipButton({
 
 export default function TestRecommendDemo() {
   const [level, setLevel] = useState<UserLevel>(2);
-  const [pattern, setPattern] = useState<Pattern>('morning');
-  const [duration, setDuration] = useState<Duration>(15);
+  const [accuracy, setAccuracy] = useState<Record<Pos, Accuracy>>({
+    noun: 95,
+    verb: 70,
+    adj: 85,
+    adv: 85,
+  });
 
-  // 점수 계산 후 상위 4개만 노출
+  const weakness: Pos = useMemo(() => {
+    const entries = Object.entries(accuracy) as [Pos, Accuracy][];
+    entries.sort((a, b) => a[1] - b[1]);
+    return entries[0][0];
+  }, [accuracy]);
+
   const ranked = useMemo(() => {
-    const scored = demoVocaBooks.map((b) => ({
-      book: b,
-      score: scoreVocaBook(b, level, pattern, duration),
-    }));
+    const scored = demoVocaBooks.map((b) => {
+      const bias = bookPosBias[b.id] ?? { noun: 0.25, verb: 0.25, adj: 0.25, adv: 0.25 };
+      const weaknessFit = bias[weakness]; // 0~1
+      const levelDist = Math.abs(b.level - level) / 2;
+      const levelScore = 1 - levelDist;
+      // 약점 매치 65% + 레벨 매치 35%
+      const score = weaknessFit * 0.65 + levelScore * 0.35;
+      return { book: b, score };
+    });
     scored.sort((a, b) => b.score - a.score);
     return scored.slice(0, 4);
-  }, [level, pattern, duration]);
+  }, [weakness, level]);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-10">
+    <div className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-10">
       {/* 좌측 컨트롤 */}
       <div className="card p-5">
-        <p className="text-caption font-semibold uppercase tracking-[0.12em] text-mute">
-          내 학습 프로필
-        </p>
+        <p className="text-caption font-semibold uppercase tracking-[0.12em] text-mute">내 학습 프로필</p>
 
-        {/* 사용자 레벨 */}
         <div className="mt-4">
           <p className="text-[13px] font-semibold text-ink">현재 레벨</p>
           <div className="mt-2 flex items-center gap-2" role="radiogroup" aria-label="레벨 선택">
@@ -168,44 +215,40 @@ export default function TestRecommendDemo() {
           </div>
         </div>
 
-        {/* 학습 패턴 */}
         <div className="mt-5">
-          <p className="text-[13px] font-semibold text-ink">학습 패턴</p>
-          <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="학습 패턴 선택">
-            {patternLabels.map((p) => (
-              <ChipButton key={p.id} active={pattern === p.id} onClick={() => setPattern(p.id)}>
-                {p.label}
-              </ChipButton>
+          <p className="text-[13px] font-semibold text-ink">품사별 정답률</p>
+          <p className="mt-1 text-caption text-mute">막대를 눌러 값을 바꿔보세요.</p>
+          <div className="mt-3 space-y-3">
+            {(Object.keys(accuracy) as Pos[]).map((p) => (
+              <AccuracyBar
+                key={p}
+                pos={p}
+                value={accuracy[p]}
+                isWeakest={p === weakness}
+                onClick={() => setAccuracy((a) => ({ ...a, [p]: cycleAccuracy(a[p]) }))}
+              />
             ))}
           </div>
         </div>
 
-        {/* 학습 시간 */}
-        <div className="mt-5">
-          <p className="text-[13px] font-semibold text-ink">학습 시간</p>
-          <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="학습 시간 선택">
-            {durationOptions.map((d) => (
-              <ChipButton key={d.id} active={duration === d.id} onClick={() => setDuration(d.id)}>
-                {d.label}
-              </ChipButton>
-            ))}
-          </div>
+        <div className="mt-5 rounded-xl bg-surface p-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-mute">자동 감지</p>
+          <p className="mt-1 text-body-sm font-bold text-ink">
+            <span style={{ color: posMeta[weakness].color }}>{posMeta[weakness].label}</span> 정답률이 낮아요
+          </p>
+          <p className="mt-1 text-caption text-mute">
+            {posMeta[weakness].label}가 많이 들어간 단어장을 우선 추천합니다.
+          </p>
         </div>
-
-        <p className="mt-5 text-caption text-mute">
-          AI가 사용자의 레벨과 생활 패턴, 학습 시간을 토대로 가장 잘 맞는 단어장을 자동 추천합니다.
-        </p>
       </div>
 
       {/* 우측 추천 결과 */}
       <div>
-        <p className="text-caption font-semibold uppercase tracking-[0.12em] text-mute">
-          맞춤 추천 단어장
-        </p>
+        <p className="text-caption font-semibold uppercase tracking-[0.12em] text-mute">맞춤 추천 단어장</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <AnimatePresence mode="popLayout">
             {ranked.map((r, i) => (
-              <BookCard key={r.book.id} book={r.book} score={r.score} rank={i} />
+              <BookCard key={r.book.id} book={r.book} score={r.score} rank={i} weakness={weakness} />
             ))}
           </AnimatePresence>
         </div>

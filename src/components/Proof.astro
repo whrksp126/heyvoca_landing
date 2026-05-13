@@ -1,13 +1,13 @@
 ---
 // 지금의 헤이보카 — 정량 지표 4종.
 // dictWordCount, dictExampleCount는 src/data/dictionaryStats.ts에서 import.
-import { dictWordCount, dictExampleCount } from '../data/dictionaryStats';
+import { dictWordCount, dictExampleCount, bookstoreBookCount, cumulativeUsers } from '../data/dictionaryStats';
 
 const stats = [
-  { value: dictWordCount, label: '큐레이션 단어 (자체 사전)' },
-  { value: '7', label: '학습 카테고리' },
+  { value: dictWordCount, label: '사전 단어 개수' },
+  { value: bookstoreBookCount, label: '서점 단어장 개수' },
   { value: dictExampleCount, label: '예문 (자체 사전)' },
-  { value: '2026.05', label: '정식 서비스 시작' },
+  { value: cumulativeUsers, label: '누적 서비스 사용자' },
 ];
 ---
 
@@ -25,8 +25,7 @@ const stats = [
         과장 없이, 정직하게.
       </h2>
       <p class="mt-5 max-w-prose text-body-lg text-sub text-pretty">
-        2026년 5월, 정식 서비스를 시작했습니다.
-        지금까지 만든 것들과, 앞으로 함께 만들어 갈 것들을 솔직하게 적어둡니다.
+        지금까지 만든 것들과, 함께 만들어 갈 것들 — 솔직하게 적어둡니다.
       </p>
     </div>
 

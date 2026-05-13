@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { EggCrack, Leaf, Plant, Carrot, Warning } from '@phosphor-icons/react';
 import StudyCardDemo, { type StudyCardMetrics } from './StudyCardDemo';
 import {
@@ -32,7 +32,6 @@ function StatNumber({ value }: { value: number }) {
   return <span>{shown}</span>;
 }
 
-// 상태별 아이콘 (DemoStatsPanel 전용 — StudyCardDemo와 동일 매핑)
 function StatusIcon({ name, size = 14 }: { name: string; size?: number }) {
   switch (name) {
     case 'EggCrack':
@@ -50,14 +49,7 @@ function StatusIcon({ name, size = 14 }: { name: string; size?: number }) {
   }
 }
 
-// 카운터 한 줄
-function StatusRow({
-  status,
-  value,
-}: {
-  status: MemoryStatus;
-  value: number;
-}) {
+function StatusRow({ status, value }: { status: MemoryStatus; value: number }) {
   const meta = memoryStatusMeta[status];
   return (
     <motion.li
@@ -67,7 +59,7 @@ function StatusRow({
     >
       <span className="flex items-center gap-2">
         <span
-          className="flex h-6 w-6 items-center justify-center rounded-full"
+          className="flex h-6 w-6 items-center justify-center rounded-full bg-white"
           style={{ color: meta.color, borderColor: meta.color, borderWidth: 1 }}
         >
           <StatusIcon name={meta.iconName} size={12} />
@@ -98,6 +90,104 @@ const initialCounts: Record<MemoryStatus, number> = demoWords.reduce(
   { unlearned: 0, leaf: 0, plant: 0, carrot: 0, overdue: 0 } as Record<MemoryStatus, number>,
 );
 
+const initialStatusByWord: Record<number, MemoryStatus> = demoWords.reduce(
+  (acc, w, i) => {
+    acc[i] = w.status;
+    return acc;
+  },
+  {} as Record<number, MemoryStatus>,
+);
+
+/**
+ * 단어별 진화 미니맵 — 현재 단어에 포커스, 각 단어의 현재 단계를 점으로 표시.
+ * 4 메인 단계(unlearned→leaf→plant→carrot) 위치 + overdue 별도 표시.
+ */
+function WordEvolutionMap({
+  statusByWord,
+  currentIndex,
+}: {
+  statusByWord: Record<number, MemoryStatus>;
+  currentIndex: number;
+}) {
+  const order: MemoryStatus[] = [...memoryStatusOrder]; // 4단계
+  const idxOf = (s: MemoryStatus) => order.indexOf(s);
+
+  return (
+    <ul className="space-y-3">
+      {demoWords.map((w, i) => {
+        const status = statusByWord[i] ?? w.status;
+        const isOverdue = status === 'overdue';
+        const stepIndex = isOverdue ? -1 : idxOf(status);
+        const isCurrent = i === currentIndex;
+        const meta = memoryStatusMeta[status];
+
+        return (
+          <li
+            key={w.word}
+            className={`rounded-xl px-3 py-2.5 transition-colors ${
+              isCurrent ? 'bg-primary-50 ring-1 ring-primary-200' : 'bg-white'
+            }`}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <span className={`font-mono text-[13px] ${isCurrent ? 'font-bold text-ink' : 'text-sub'}`}>
+                {w.word}
+              </span>
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={status}
+                  initial={{ opacity: 0, scale: 0.7 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.7 }}
+                  transition={{ duration: 0.2 }}
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                  style={{ backgroundColor: meta.bgColor, color: meta.color }}
+                >
+                  <StatusIcon name={meta.iconName} size={10} />
+                  {meta.label}
+                </motion.span>
+              </AnimatePresence>
+            </div>
+
+            {/* 4단계 진행 트랙 */}
+            <div className="mt-2 flex items-center gap-1">
+              {order.map((s, idx) => {
+                const m = memoryStatusMeta[s];
+                const reached = !isOverdue && idx <= stepIndex;
+                return (
+                  <div key={s} className="flex flex-1 items-center gap-1">
+                    <motion.span
+                      animate={{
+                        backgroundColor: reached ? m.color : '#E5E5E5',
+                        scale: idx === stepIndex && isCurrent ? 1.15 : 1,
+                      }}
+                      transition={{ duration: 0.3 }}
+                      className="block h-1.5 w-1.5 rounded-full"
+                    />
+                    {idx < order.length - 1 && (
+                      <motion.span
+                        animate={{ backgroundColor: reached && idx < stepIndex ? m.color : '#E5E5E5' }}
+                        className="block h-[2px] flex-1 rounded-full"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+              {isOverdue && (
+                <span
+                  className="ml-1 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold"
+                  style={{ backgroundColor: memoryStatusMeta.overdue.bgColor, color: memoryStatusMeta.overdue.color }}
+                >
+                  지연
+                </span>
+              )}
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 export default function DemoStatsPanel() {
   const [m, setM] = useState<StudyCardMetrics>({
     index: 0,
@@ -106,9 +196,10 @@ export default function DemoStatsPanel() {
     reviewSeen: 0,
     newSeen: 0,
     statusCounts: initialCounts,
+    statusByWord: initialStatusByWord,
+    isPlaying: true,
   });
 
-  // 상태별 5칸 + overdue
   const orderForDisplay: MemoryStatus[] = [...memoryStatusOrder, 'overdue'];
 
   return (
@@ -119,9 +210,7 @@ export default function DemoStatsPanel() {
 
       <aside className="space-y-4">
         <div className="card p-5">
-          <p className="text-caption font-semibold uppercase tracking-[0.12em] text-mute">
-            이번 세션
-          </p>
+          <p className="text-caption font-semibold uppercase tracking-[0.12em] text-mute">이번 세션</p>
           <div className="mt-3 flex items-baseline gap-2">
             <p className="text-display-md font-bold text-ink tabular-nums">
               <StatNumber value={m.doneCount} />
@@ -129,10 +218,7 @@ export default function DemoStatsPanel() {
             <p className="text-body-sm text-mute">/ {demoWords.length} 단어</p>
           </div>
 
-          {/* 5단계 상태별 카운터 */}
-          <p className="mt-5 text-caption font-semibold uppercase tracking-[0.12em] text-mute">
-            암기 단계 분포
-          </p>
+          <p className="mt-5 text-caption font-semibold uppercase tracking-[0.12em] text-mute">암기 단계 분포</p>
           <ul className="mt-2 space-y-1.5">
             {orderForDisplay.map((s) => (
               <StatusRow key={s} status={s} value={m.statusCounts[s] ?? 0} />
@@ -141,40 +227,15 @@ export default function DemoStatsPanel() {
         </div>
 
         <div className="card p-5">
-          <p className="text-caption font-semibold uppercase tracking-[0.12em] text-mute">
-            다음 복습 예정
+          <p className="text-caption font-semibold uppercase tracking-[0.12em] text-mute">단어별 진화</p>
+          <p className="mt-1 text-caption text-mute">
+            카드가 넘어갈 때마다 해당 단어의 암기 단계가 한 칸씩 진화합니다.
           </p>
-          <ul className="mt-3 space-y-2 text-body-sm">
-            {demoWords.map((w, i) => (
-              <Row
-                key={w.word}
-                label={w.word}
-                right={`${w.interval}일 뒤`}
-                pinned={m.doneCount >= i + 1}
-              />
-            ))}
-          </ul>
-          <p className="mt-4 text-caption text-mute">
-            난이도와 정답률에 따라, 다음 복습 시점이 단어별로 다르게 계산됩니다.
-          </p>
+          <div className="mt-4">
+            <WordEvolutionMap statusByWord={m.statusByWord} currentIndex={m.index} />
+          </div>
         </div>
       </aside>
     </div>
-  );
-}
-
-function Row({ label, right, pinned }: { label: string; right: string; pinned: boolean }) {
-  return (
-    <li className="flex items-center justify-between">
-      <span className={`font-mono text-body-sm ${pinned ? 'text-ink' : 'text-mute'}`}>{label}</span>
-      <motion.span
-        initial={false}
-        animate={{ opacity: pinned ? 1 : 0.3, x: pinned ? 0 : 4 }}
-        transition={{ duration: 0.3 }}
-        className="text-caption text-sub"
-      >
-        {right}
-      </motion.span>
-    </li>
   );
 }

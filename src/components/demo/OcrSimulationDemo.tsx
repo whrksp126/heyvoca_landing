@@ -11,6 +11,8 @@ import {
   demoOcrWords,
   ocrAllBoxes,
   ocrMatchedBoxCount,
+  pageLines,
+  TEXT_RENDER,
 } from '../../data/demoOcrWords';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -33,9 +35,9 @@ const STAGE_DURATIONS_MS: Record<Stage, number> = {
   5: 1000,
 };
 
-// 책 페이지 viewBox
-const PAGE_W = 100;
-const PAGE_H = 140;
+// 책 페이지 viewBox (TEXT_RENDER와 공유)
+const PAGE_W = TEXT_RENDER.pageW;
+const PAGE_H = TEXT_RENDER.pageH;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 책 페이지 SVG — 실제 인쇄된 영문 책 페이지를 모사
@@ -44,140 +46,13 @@ const PAGE_H = 140;
 // - 본문은 ocrAllBoxes 좌표와 정확히 매칭되는 라인 구성
 // - 좌상단/우상단 모서리 살짝 그늘짐
 // ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// 책 페이지 SVG — 인쇄된 영문 책 페이지 모사
+// - pageLines 와 TEXT_RENDER 를 단일 소스로 사용 → 인식 박스 좌표와 1:1 매칭
+// - 모노스페이스 폰트로 글자 advance 균일화 (박스 정렬 정확성 ↑)
+// ─────────────────────────────────────────────────────────────────────────────
 function BookPageSvg({ className }: { className?: string }) {
-  // 본문 라인. ocrAllBoxes 좌표와 1:1로 매칭되도록 단어 위치/길이가 짜여 있음.
-  // x좌표가 일치하는 단어는 인식 박스가 정확히 위에 얹힘.
-  const lines: { y: number; spans: { text: string; x: number; bold?: boolean }[] }[] = [
-    {
-      y: 22,
-      spans: [
-        { text: 'Sometimes', x: 5 },
-        { text: 'serendipity', x: 22.5 },
-        { text: 'arrives', x: 42.5 },
-        { text: 'in', x: 56 },
-        { text: 'the', x: 61 },
-        { text: 'smallest', x: 67 },
-      ],
-    },
-    {
-      y: 29,
-      spans: [
-        { text: 'moments', x: 5 },
-        { text: '— an', x: 21 },
-        { text: 'ephemeral', x: 28 },
-        { text: 'glance,', x: 47 },
-        { text: 'a faint', x: 60 },
-      ],
-    },
-    {
-      y: 36,
-      spans: [
-        { text: 'song. She', x: 5 },
-        { text: 'wrote', x: 22 },
-        { text: 'mellifluous', x: 22 + 0 }, // 동일 줄에 두 단어, x는 본문 흐름 기준
-        { text: 'words', x: 43 },
-        { text: 'and', x: 53 },
-      ],
-    },
-    {
-      y: 43,
-      spans: [
-        { text: 'kept a', x: 5 },
-        { text: 'resilient', x: 17.5 },
-        { text: 'spirit', x: 33 },
-        { text: 'through', x: 42 },
-        { text: 'the', x: 56 },
-        { text: 'years.', x: 62 },
-      ],
-    },
-    {
-      y: 50,
-      spans: [
-        { text: 'Everything', x: 5 },
-        { text: 'ubiquitous', x: 24.5 },
-        { text: 'light', x: 44 },
-        { text: 'around', x: 53 },
-      ],
-    },
-    {
-      y: 57,
-      spans: [
-        { text: 'them,', x: 5 },
-        { text: 'and she', x: 16 },
-        { text: 'had to', x: 28 },
-        { text: 'accomplish', x: 36.5 },
-        { text: 'one', x: 56 },
-      ],
-    },
-    {
-      y: 64,
-      spans: [
-        { text: 'thing —', x: 5 },
-        { text: 'to be', x: 17 },
-        { text: 'remembered.', x: 25 },
-        { text: 'It', x: 49 },
-        { text: 'was', x: 53 },
-      ],
-    },
-    {
-      y: 71,
-      spans: [
-        { text: 'enough', x: 5 },
-        { text: 'to', x: 17 },
-        { text: 'walk', x: 21 },
-        { text: 'with', x: 30 },
-        { text: 'the', x: 38 },
-        { text: 'rising', x: 44 },
-        { text: 'sun', x: 56 },
-      ],
-    },
-    {
-      y: 78,
-      spans: [
-        { text: 'each', x: 5 },
-        { text: 'morning,', x: 13 },
-        { text: 'to', x: 30 },
-        { text: 'hold', x: 34 },
-        { text: 'a small', x: 43 },
-        { text: 'truth.', x: 57 },
-      ],
-    },
-    {
-      y: 85,
-      spans: [
-        { text: 'And', x: 5 },
-        { text: 'when', x: 12 },
-        { text: 'the', x: 22 },
-        { text: 'autumn', x: 28 },
-        { text: 'wind', x: 42 },
-        { text: 'came,', x: 51 },
-      ],
-    },
-    {
-      y: 92,
-      spans: [
-        { text: 'she', x: 5 },
-        { text: 'smiled', x: 11 },
-        { text: 'and', x: 23 },
-        { text: 'whispered', x: 31 },
-        { text: 'to', x: 50 },
-        { text: 'herself,', x: 54 },
-      ],
-    },
-    {
-      y: 99,
-      spans: [
-        { text: '“There', x: 5 },
-        { text: 'is', x: 16 },
-        { text: 'still', x: 20 },
-        { text: 'time', x: 28 },
-        { text: 'to', x: 37 },
-        { text: 'begin', x: 41 },
-        { text: 'again.”', x: 51 },
-      ],
-    },
-  ];
-
+  const { lineXStart, lineYStart, lineHeight, fontSize } = TEXT_RENDER;
   return (
     <svg
       viewBox={`0 0 ${PAGE_W} ${PAGE_H}`}
@@ -186,27 +61,19 @@ function BookPageSvg({ className }: { className?: string }) {
       aria-hidden
     >
       <defs>
-        {/* 종이 톤 그라데이션 (아이보리 → 살짝 진해짐) */}
         <linearGradient id="paperGrad" x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stopColor="#FAF6EE" />
           <stop offset="50%" stopColor="#F4ECDA" />
           <stop offset="100%" stopColor="#EDE2C9" />
         </linearGradient>
-        {/* 종이 결 노이즈 — 너무 강하지 않게 */}
         <filter id="paperNoise" x="0" y="0" width="100%" height="100%">
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="0.9"
-            numOctaves="2"
-            seed="7"
-          />
+          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" />
           <feColorMatrix
             type="matrix"
             values="0 0 0 0 0.55  0 0 0 0 0.45  0 0 0 0 0.30  0 0 0 0.18 0"
           />
           <feComposite in2="SourceGraphic" operator="in" />
         </filter>
-        {/* 바깥쪽 비네팅 (radial gradient) */}
         <radialGradient id="pageVignette" cx="50%" cy="50%" r="75%">
           <stop offset="55%" stopColor="#000" stopOpacity="0" />
           <stop offset="100%" stopColor="#000" stopOpacity="0.22" />
@@ -215,7 +82,6 @@ function BookPageSvg({ className }: { className?: string }) {
 
       {/* 종이 바닥 */}
       <rect x="0" y="0" width={PAGE_W} height={PAGE_H} fill="url(#paperGrad)" />
-      {/* 종이 결 노이즈 (느린 텍스처 느낌) */}
       <rect
         x="0"
         y="0"
@@ -251,7 +117,6 @@ function BookPageSvg({ className }: { className?: string }) {
       >
         Small Moments
       </text>
-      {/* 표제 아래 가느다란 구분선 */}
       <line
         x1={PAGE_W / 2 - 10}
         y1="16"
@@ -261,27 +126,23 @@ function BookPageSvg({ className }: { className?: string }) {
         strokeWidth="0.15"
       />
 
-      {/* 본문 — 줄별 단어 단위 렌더 (단어 사이 자연스러운 간격) */}
-      {lines.map((line, lineIdx) => (
-        <g key={lineIdx}>
-          {line.spans.map((span, spanIdx) => (
-            <text
-              key={spanIdx}
-              x={span.x}
-              y={line.y}
-              fontSize="3.4"
-              fontFamily="Georgia, 'Times New Roman', serif"
-              fill="#2d2418"
-              fontWeight={span.bold ? '700' : '400'}
-              letterSpacing="0.05"
-            >
-              {span.text}
-            </text>
-          ))}
-        </g>
+      {/* 본문 — pageLines를 모노스페이스 폰트로 렌더 (박스 좌표와 동기화) */}
+      {pageLines.map((line, lineIdx) => (
+        <text
+          key={lineIdx}
+          x={lineXStart}
+          y={lineYStart + lineIdx * lineHeight}
+          fontSize={fontSize}
+          fontFamily="'Courier New', ui-monospace, monospace"
+          fill="#2d2418"
+          fontWeight="500"
+          xmlSpace="preserve"
+        >
+          {line}
+        </text>
       ))}
 
-      {/* 페이지 번호 (하단 중앙) */}
+      {/* 페이지 번호 */}
       <text
         x={PAGE_W / 2}
         y={PAGE_H - 8}
@@ -293,11 +154,11 @@ function BookPageSvg({ className }: { className?: string }) {
         — 12 —
       </text>
 
-      {/* 비네팅 */}
       <rect x="0" y="0" width={PAGE_W} height={PAGE_H} fill="url(#pageVignette)" />
     </svg>
   );
 }
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // iPhone 프레임 — iPhone 15 비율 모사

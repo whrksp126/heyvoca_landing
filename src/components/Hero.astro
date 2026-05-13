@@ -13,14 +13,13 @@
       </span>
 
       <h1 class="mt-6 text-balance font-extrabold tracking-tight text-ink text-[44px] leading-[1.08] md:text-[64px] lg:text-display-2xl">
-        그냥 외우세요.<br />
+        접속만 하세요.<br />
         나머진 <span class="text-primary-500">헤이보카</span>가<br class="hidden md:block" />
         알아서 합니다.
       </h1>
 
       <p class="mt-7 max-w-prose text-body-lg text-sub text-pretty">
-        언제 다시 봐야 할지, 어떤 단어가 다시 가물가물해질지<br class="hidden md:block" />
-        — 데이터가 대신 챙겨드립니다.
+        어떤 단어를 언제 다시 봐야 할지, 헤이보카가 대신 챙겨드립니다.
       </p>
 
       <div class="mt-9 flex flex-wrap items-center gap-3">
@@ -70,42 +69,72 @@
           <circle cx="14" cy="64" r="2" fill="currentColor" opacity="0.5" />
         </svg>
 
-        {/* iPhone frame mockup */}
+        {/* iPhone frame mockup — 실제 앱 StudyMain.jsx 디자인 미니어처 */}
         <div class="relative mx-auto aspect-[9/19] w-[280px] md:w-[300px]">
-          {/* phone body */}
           <div class="absolute inset-0 rounded-[42px] bg-ink p-[6px] shadow-card">
             <div class="relative h-full w-full overflow-hidden rounded-[36px] bg-white">
               {/* Dynamic island */}
               <div class="absolute left-1/2 top-2 z-10 h-[22px] w-[88px] -translate-x-1/2 rounded-full bg-ink"></div>
 
-              {/* Screen content: 미리보기 단어 카드 */}
               <div class="flex h-full flex-col">
-                {/* status bar 가짜 */}
+                {/* status bar */}
                 <div class="flex items-center justify-between px-6 pt-2 text-[10px] font-semibold text-ink">
                   <span>9:41</span>
                   <span>●●●●</span>
                 </div>
 
-                {/* top bar */}
-                <div class="flex items-center justify-between px-5 pt-6">
-                  <span class="text-[11px] font-semibold text-mute">오늘의 학습</span>
-                  <span class="rounded-full bg-surface px-2 py-0.5 text-[10px] font-semibold text-sub">12 / 30</span>
+                {/* 헤더 */}
+                <div class="flex items-center justify-between px-5 pt-7">
+                  <span class="text-[12px] font-semibold text-ink">오늘의 학습</span>
+                  <span class="text-[10px] font-semibold text-mute">12 / 30</span>
                 </div>
 
-                {/* card */}
-                <div class="flex flex-1 flex-col items-center justify-center px-5 pb-6">
-                  <span class="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2.5 py-0.5 text-[10px] font-semibold text-primary-700">
-                    다시 만난 단어
-                  </span>
-                  <p class="mt-4 font-mono text-2xl font-bold tracking-tight text-ink">serendipity</p>
-                  <p class="mt-1 text-[11px] text-mute">/ˌserənˈdɪpəti/</p>
-                  <div class="mt-5 w-full rounded-xl bg-surface px-3 py-3 text-center text-[12px] text-sub">
-                    뜻밖의 행운, 우연한 발견
+                {/* 프로그레스 바 (실제 앱: 16px 높이) */}
+                <div class="mt-2 px-5">
+                  <div class="relative h-[10px] w-full overflow-hidden rounded-full bg-primary-100">
+                    <div class="h-full rounded-full bg-primary-500" style="width: 40%;"></div>
                   </div>
-                  <div class="mt-6 flex w-full items-center justify-around">
-                    <button class="flex h-9 w-20 items-center justify-center rounded-full bg-surface text-[11px] font-semibold text-sub" aria-hidden="true">모르겠음</button>
-                    <button class="flex h-9 w-20 items-center justify-center rounded-full bg-primary-500 text-[11px] font-semibold text-white" aria-hidden="true">완벽</button>
+                </div>
+
+                {/* 카드 영역 — 실제 앱: bg-layout-gray-50 rounded-[12px] */}
+                <div class="mt-3 mx-5 flex-1 rounded-[12px] bg-[#F5F5F5] p-4">
+                  <div class="flex flex-col gap-3">
+                    {/* 암기 상태 배지 — 단기암기 (Leaf) */}
+                    <span class="inline-flex w-fit items-center gap-1 rounded-full border border-[#77CE4F]/30 bg-white px-2 py-0.5 text-[10px] font-semibold" style="color: #77CE4F;">
+                      <svg width="11" height="11" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
+                        <path d="M223.5 32h-72A104.6 104.6 0 0 0 47 136.5a103.66 103.66 0 0 0 21.5 63.27L43.05 225.21a8 8 0 0 0 11.32 11.32l25.41-25.41A103.66 103.66 0 0 0 143 232.55a104.59 104.59 0 0 0 104.5-104.5v-88a8 8 0 0 0-8-8.05Z"/>
+                      </svg>
+                      단기암기
+                    </span>
+
+                    {/* 단어 + 스피커 */}
+                    <div class="flex items-start justify-between gap-1">
+                      <span class="font-mono text-[19px] font-bold leading-tight text-ink">serendipity</span>
+                      <svg width="13" height="13" viewBox="0 0 256 256" fill="#C5C5C5" class="mt-1 shrink-0" aria-hidden="true">
+                        <path d="M155.51 24.81a8 8 0 0 0-8.42.88L77.25 80H32a16 16 0 0 0-16 16v64a16 16 0 0 0 16 16h45.25l69.84 54.31A8 8 0 0 0 160 224V32a8 8 0 0 0-4.49-7.19Z"/>
+                      </svg>
+                    </div>
+
+                    {/* IPA */}
+                    <p class="-mt-2 text-[10px] text-mute">/ˌserənˈdɪpəti/</p>
+
+                    {/* 의미 (실제 앱: 작은 폰트, gray-600) */}
+                    <p class="text-[11px] text-sub">뜻밖의 행운, 우연한 발견</p>
+
+                    {/* 예문 영역 */}
+                    <div class="mt-1 flex flex-col gap-1.5">
+                      <p class="text-[10px] font-bold text-ink">예문</p>
+                      <p class="text-[10px] text-ink">A series of serendipities led to her career.</p>
+                      <p class="text-[10px] text-mute">연속된 우연이 그녀의 커리어로 이어졌다.</p>
+                    </div>
                   </div>
+                </div>
+
+                {/* 하단 3버튼 — 실제 앱: 이전 / 재생 / 다음 */}
+                <div class="flex gap-2 px-5 py-4">
+                  <div class="flex h-9 flex-1 items-center justify-center rounded-lg bg-[#F0F0F0] text-[11px] font-bold text-[#C5C5C5]">이전</div>
+                  <div class="flex h-9 flex-1 items-center justify-center rounded-lg bg-[#C5C5C5] text-[11px] font-bold text-white">재생</div>
+                  <div class="flex h-9 flex-1 items-center justify-center rounded-lg bg-[#C5C5C5] text-[11px] font-bold text-white">다음</div>
                 </div>
               </div>
             </div>
