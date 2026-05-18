@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence, useReducedMotion, useScroll, useMotionValueEvent } from 'framer-motion';
 import { EggCrack, Leaf, Plant, Carrot, Warning } from '@phosphor-icons/react';
 import {
   memoryStatusMeta,
@@ -15,7 +15,6 @@ const ICON_MAP = {
 } as const;
 
 const SEQUENCE: MemoryStatus[] = ['unlearned', 'leaf', 'plant', 'carrot', 'overdue'];
-const STEP_MS = 3200;
 
 const DEMO_WORD = {
   word: 'serendipity',
@@ -34,21 +33,25 @@ const STAGE_DURATION = {
 export default function MemoryEvolutionDemo() {
   const [stageIdx, setStageIdx] = useState(0);
   const prefersReduced = useReducedMotion();
+  const sectionRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start end', 'end start'],
+  });
+
+  useMotionValueEvent(scrollYProgress, 'change', (p) => {
     if (prefersReduced) return;
-    const t = setInterval(() => {
-      setStageIdx((i) => (i + 1) % SEQUENCE.length);
-    }, STEP_MS);
-    return () => clearInterval(t);
-  }, [prefersReduced]);
+    const idx = Math.min(SEQUENCE.length - 1, Math.max(0, Math.floor(p * SEQUENCE.length)));
+    setStageIdx(idx);
+  });
 
   const currentStatus = SEQUENCE[stageIdx];
   const currentMeta = memoryStatusMeta[currentStatus];
   const CurrentIcon = ICON_MAP[currentMeta.iconName];
 
   return (
-    <div className="card relative overflow-hidden p-6 md:p-8">
+    <div ref={sectionRef} className="card relative overflow-hidden p-6 md:p-8">
       {/* 헤더 */}
       <div className="mb-6 flex items-center justify-between">
         <p className="text-caption font-semibold uppercase tracking-[0.12em] text-mute">

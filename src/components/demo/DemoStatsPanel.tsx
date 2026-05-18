@@ -120,7 +120,7 @@ function WordEvolutionMap({
   }, [currentIndex]);
 
   return (
-    <ul ref={listRef} className="max-h-[420px] space-y-3 overflow-y-auto pr-1">
+    <ul ref={listRef} className="scrollbar-pink max-h-[420px] space-y-3 overflow-y-auto pr-1">
       {demoWords.map((w, i) => {
         const status = statusByWord[i] ?? w.status;
         const isOverdue = status === 'overdue';

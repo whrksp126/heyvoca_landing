@@ -3,7 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { EggCrack, Leaf, Plant, Carrot, Warning, Cards, Ear, TextT, Pencil, ListBullets } from '@phosphor-icons/react';
+import { EggCrack, Leaf, Plant, Carrot, Warning } from '@phosphor-icons/react';
 import TestPlayDemo, { type TestMetrics } from './TestPlayDemo';
 import {
   demoWords,
@@ -29,12 +29,12 @@ function StatusIcon({ name, size = 12 }: { name: string; size?: number }) {
   }
 }
 
-const TYPE_META: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
-  multipleChoice: { label: '4지선다', icon: <ListBullets size={14} weight="bold" />, color: '#2E90FA' },
-  multipleChoiceListening: { label: '듣기 4지선다', icon: <Ear size={14} weight="bold" />, color: '#7C3AED' },
-  fillInTheBlank: { label: '빈칸 채우기', icon: <Pencil size={14} weight="bold" />, color: '#F79009' },
-  cardMatch: { label: '카드 매칭', icon: <Cards size={14} weight="bold" />, color: '#FF70D4' },
-  cardMatchListening: { label: '듣기 매칭', icon: <TextT size={14} weight="bold" />, color: '#22C55E' },
+const TYPE_META: Record<string, { label: string; color: string }> = {
+  multipleChoice: { label: '4지선다', color: '#2E90FA' },
+  multipleChoiceListening: { label: '듣기 4지선다', color: '#7C3AED' },
+  fillInTheBlank: { label: '빈칸 채우기', color: '#F79009' },
+  cardMatch: { label: '카드 매칭', color: '#FF70D4' },
+  cardMatchListening: { label: '듣기 매칭', color: '#22C55E' },
 };
 
 function WordEvolutionList({ statusByWord, statusBefore }: { statusByWord: Record<number, MemoryStatus>; statusBefore: Record<number, MemoryStatus> }) {
@@ -42,7 +42,7 @@ function WordEvolutionList({ statusByWord, statusBefore }: { statusByWord: Recor
   const idxOf = (s: MemoryStatus) => order.indexOf(s);
 
   return (
-    <ul className="max-h-[420px] space-y-3 overflow-y-auto pr-1">
+    <ul className="scrollbar-pink max-h-[420px] space-y-3 overflow-y-auto pr-1">
       {demoWords.map((w) => {
         const before = statusBefore[w.id] ?? w.status;
         const after = statusByWord[w.id] ?? before;
@@ -161,11 +161,10 @@ export default function TestDemoPanel() {
                 >
                   <span className="flex items-center gap-2">
                     <span
-                      className="flex h-6 w-6 items-center justify-center rounded-full bg-white"
-                      style={{ color: meta.color, borderColor: meta.color, borderWidth: 1 }}
-                    >
-                      {meta.icon}
-                    </span>
+                      className="block h-2 w-2 rounded-full"
+                      style={{ backgroundColor: meta.color }}
+                      aria-hidden
+                    />
                     <span className="text-[12px] font-semibold" style={{ color: meta.color }}>
                       {meta.label}
                     </span>

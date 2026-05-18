@@ -109,6 +109,23 @@
     -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
             mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
   }
+
+  .scrollbar-pink {
+    scrollbar-width: thin;
+    scrollbar-color: #FF70D4 #FFEEFA;
+  }
+  .scrollbar-pink::-webkit-scrollbar {
+    width: 8px;
+    background: #FFEEFA;
+  }
+  .scrollbar-pink::-webkit-scrollbar-thumb {
+    background: #FF70D4;
+    border-radius: 8px;
+  }
+  .scrollbar-pink::-webkit-scrollbar-track {
+    background: #FFEEFA;
+    border-radius: 8px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

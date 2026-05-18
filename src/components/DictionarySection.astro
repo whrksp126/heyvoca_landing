@@ -3,9 +3,9 @@
 // heyvoca_front의 WordDetaileNewBottomSheet 미니 재현.
 
 const meanings = [
-  { pos: '동사', text: '성취하다, 이루다' },
-  { pos: '동사', text: '(일·임무를) 완수하다' },
-  { pos: '동사', text: '(목표를) 달성하다' },
+  { text: '성취하다, 이루다' },
+  { text: '(일·임무를) 완수하다' },
+  { text: '(목표를) 달성하다' },
 ];
 
 const examples = [
@@ -90,9 +90,6 @@ const examples = [
                 {i + 1}
               </span>
               <div class="flex flex-1 items-baseline gap-2">
-                <span class="rounded bg-primary-100 px-1.5 py-0.5 text-[11px] font-semibold text-primary-700">
-                  {m.pos}
-                </span>
                 <span class="text-body text-ink">{m.text}</span>
               </div>
             </li>

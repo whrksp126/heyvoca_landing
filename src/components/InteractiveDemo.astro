@@ -1,10 +1,10 @@
 ---
-import DemoStatsPanel from './demo/DemoStatsPanel.tsx';
+import StudyCardDemo from './demo/StudyCardDemo.tsx';
 ---
 
 <section id="demo" class="section bg-white" aria-labelledby="demo-h2">
-  <div class="container-content">
-    <div class="max-w-3xl" data-reveal>
+  <div class="container-content grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
+    <div data-reveal>
       <span class="eyebrow">
         <span class="h-1.5 w-1.5 rounded-full bg-primary-500"></span>
         한 번 해보세요
@@ -17,12 +17,13 @@ import DemoStatsPanel from './demo/DemoStatsPanel.tsx';
         미리 체험해 보세요.
       </h2>
       <p class="mt-6 max-w-prose text-body-lg text-sub text-pretty">
-        카드를 넘기며 단어를 익혀보세요. 오른쪽 패널이 진행 상황과 단어별 단계 진화를 실시간 반영합니다.
+        카드를 넘기며 단어를 익혀보세요. 자동 진행 또는 이전·다음으로 카드를 넘기며 단어가 단계별로 진화하는 모습을 확인해 보세요.
+        스와이프 · 키보드 ← / → 도 가능합니다.
       </p>
     </div>
 
-    <div class="mt-14" data-reveal>
-      <DemoStatsPanel client:visible />
+    <div class="mx-auto w-full max-w-[420px]" data-reveal>
+      <StudyCardDemo client:visible />
     </div>
   </div>
 </section>

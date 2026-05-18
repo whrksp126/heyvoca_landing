@@ -9,6 +9,7 @@ import type { DemoWord, MemoryStatus } from '../../data/demoWords';
 import { demoWords, nextStatusOnGood, nextStatusOnBad } from '../../data/demoWords';
 import MemorizationStatus from './MemorizationStatus';
 import { getTextSound, stopCurrentSound } from '../../utils/tts';
+import { playSuccessSound, playErrorSound } from '../../utils/sound';
 
 // 실서비스 stateNameMap + 색상 (MemorizationStatus와 동일)
 const STATE_NAME: Record<MemoryStatus, string> = {
@@ -439,6 +440,7 @@ function CardMatchCard({ question, isListening, currentStatusByWord, onWordResol
     wordResultsRef.current[leftId] = isMatch;
 
     if (isMatch) {
+      playSuccessSound();
       resolveWord(leftId, true);
       setCorrectFlash((s) => new Set([...s, leftId]));
       // 매칭 즉시 단어 1개 진행 — 카드 매칭 한 쌍 정답 시 프로그레스 +1
@@ -453,6 +455,7 @@ function CardMatchCard({ question, isListening, currentStatusByWord, onWordResol
         }
       }, 800);
     } else {
+      playErrorSound();
       resolveWord(leftId, false);
       setWrongFlashLeft((s) => new Set([...s, leftId]));
       setWrongFlashRight((s) => new Set([...s, rightId]));
@@ -1184,6 +1187,7 @@ export default function TestPlayDemo({
     setUserSelected(i);
     setIsCorrect(correct);
     setIsAnswered(true);
+    if (correct) playSuccessSound(); else playErrorSound();
     const idx = progressIndex;
     setQuestions((qs) => {
       const next = [...qs];
