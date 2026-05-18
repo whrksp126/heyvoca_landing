@@ -107,7 +107,7 @@ function OptionButton({ text, selected, isCorrect, isAnswer, disabled, onClick }
 
 function ResultOverlay({ isCorrect }: { isCorrect: boolean | null }) {
   return (
-    <div className="pointer-events-none absolute left-1/2 top-1/2 z-[1] -translate-x-1/2 -translate-y-1/2">
+    <div className="pointer-events-none absolute left-1/2 top-1/2 z-[5] -translate-x-1/2 -translate-y-1/2">
       <AnimatePresence>
         {isCorrect === true && (
           <motion.div
@@ -341,10 +341,10 @@ function FillBlankCard({ question, userSelected, isCorrect, isAnswered, onSelect
             </span>
             {after}
           </p>
-
-          {/* O/X 오버레이 — 영문 영역 중앙 */}
-          <ResultOverlay isCorrect={isCorrect} />
         </div>
+
+        {/* O/X 오버레이 — 통합 카드 영역(한국어+영문) 중앙, 빈칸 박스보다 위(z-[5]) */}
+        <ResultOverlay isCorrect={isCorrect} />
 
         {/* 암기 상태 변경 배지 — 통합 영역 상단 중앙 (한국어+영문 박스 기준) */}
         {isAnswered && memoryStateChange && (
@@ -1127,6 +1127,9 @@ export default function TestPlayDemo({
   }, []);
   const [statusByWord, setStatusByWord] = useState<Record<number, MemoryStatus>>(initialStatus);
 
+  // TTS 요청 ID — 이전 promise의 .finally가 늦게 와도 현재 요청과 다르면 isSpeaking을 false로 떨어뜨리지 않도록
+  const speakReqIdRef = useRef(0);
+
   const cur = questions[progressIndex];
   const totalQuestions = questions.length;
 
@@ -1145,16 +1148,22 @@ export default function TestPlayDemo({
   }, [progressIndex, totalQuestions, statusByWord, questions, onMetricsChange]);
 
   // 자동 TTS — 슬라이드 진입 시 단어 자동 재생 (cardMatch/fillInTheBlank 제외, 실서비스 동일)
+  // dep에서 cur 제외: 채점 시 setQuestions로 객체 참조가 바뀌어도 같은 인덱스면 재발동 안 됨
   useEffect(() => {
     if (!userStarted || !cur || isFinished) return;
     stopCurrentSound();
-    setIsSpeaking(false);
+    const reqId = ++speakReqIdRef.current;
     const autoSpeakTypes = ['multipleChoice', 'multipleChoiceListening'];
     if (autoSpeakTypes.includes(cur.questionType) && cur.word) {
       setIsSpeaking(true);
-      getTextSound(cur.word.word, 'en').finally(() => setIsSpeaking(false));
+      getTextSound(cur.word.word, 'en').finally(() => {
+        if (speakReqIdRef.current === reqId) setIsSpeaking(false);
+      });
+    } else {
+      setIsSpeaking(false);
     }
-  }, [progressIndex, isFinished, cur, userStarted]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [progressIndex, isFinished, userStarted]);
 
   // 옵션 표시 텍스트 (랜덤 의미 2~3개) — 진입 시점에 고정
   const optionsDisplay = useMemo(() => {
@@ -1241,10 +1250,14 @@ export default function TestPlayDemo({
   };
 
   // 스피커 클릭 (multipleChoice/Listening 공통)
+  // 재클릭 시 stopCurrentSound가 이전 promise를 즉시 resolve시키지만, reqId 매칭으로 이전 .finally의 setIsSpeaking(false)는 무시
   const handleSpeak = () => {
     if (!cur.word) return;
+    const reqId = ++speakReqIdRef.current;
     setIsSpeaking(true);
-    getTextSound(cur.word.word, 'en').finally(() => setIsSpeaking(false));
+    getTextSound(cur.word.word, 'en').finally(() => {
+      if (speakReqIdRef.current === reqId) setIsSpeaking(false);
+    });
   };
 
   const handleRestart = () => {
@@ -1331,26 +1344,28 @@ export default function TestPlayDemo({
             <span>●●●●</span>
           </div>
 
-          {/* 프로그레스 바 — 단어 기준 진행률 (총 14단어, 카드 매칭은 단어별 +1) */}
-          <div className="px-[16px] pt-6">
-            <motion.div className="relative mb-[15px] h-[16px] w-full overflow-hidden rounded-[50px] bg-primary-100">
-              <motion.div
-                className="h-full rounded-[50px] bg-primary-500"
-                initial={{ width: '0%' }}
-                animate={{ width: `${(wordProgress / TOTAL_WORDS) * 100}%` }}
-                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-              />
-              <span
-                className="absolute right-[10px] top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[#7b7b7b]"
-                style={{ letterSpacing: '-0.2px' }}
-              >
-                {wordProgress}/{TOTAL_WORDS}
-              </span>
-            </motion.div>
-          </div>
+          {/* 프로그레스 바 — 단어 기준 진행률 (총 14단어, 카드 매칭은 단어별 +1). 결과 화면에선 숨김 */}
+          {!isFinished && (
+            <div className="px-[16px] pt-6">
+              <motion.div className="relative mb-[15px] h-[16px] w-full overflow-hidden rounded-[50px] bg-primary-100">
+                <motion.div
+                  className="h-full rounded-[50px] bg-primary-500"
+                  initial={{ width: '0%' }}
+                  animate={{ width: `${(wordProgress / TOTAL_WORDS) * 100}%` }}
+                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                />
+                <span
+                  className="absolute right-[10px] top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[#7b7b7b]"
+                  style={{ letterSpacing: '-0.2px' }}
+                >
+                  {wordProgress}/{TOTAL_WORDS}
+                </span>
+              </motion.div>
+            </div>
+          )}
 
-          {/* 문제 영역 — 결과 화면일 때는 전체 영역 스크롤 */}
-          <div className={`relative h-[500px] px-[16px] pb-[20px] ${isFinished ? 'overflow-y-auto' : 'overflow-hidden'}`}>
+          {/* 문제 영역 — 결과 화면일 때는 전체 영역 스크롤 (실서비스 동일하게 스크롤바 숨김) */}
+          <div className={`relative h-[500px] px-[16px] pb-[20px] ${isFinished ? 'overflow-y-auto scrollbar-hide' : 'overflow-hidden'}`}>
             {isFinished ? (
               <ResultScreen
                 questions={questions}

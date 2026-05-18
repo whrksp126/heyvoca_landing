@@ -126,6 +126,15 @@
     background: #FFEEFA;
     border-radius: 8px;
   }
+
+  /* 스크롤바 숨김 — 실서비스 heyvoca_front/src/index.css 동일 */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
