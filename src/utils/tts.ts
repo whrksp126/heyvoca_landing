@@ -1,10 +1,11 @@
 // heyvoca 백엔드 TTS API 호출 유틸 (heyvoca_front/src/utils/common.jsx의 getTextSound 포팅)
-// 실서비스와 동일한 백엔드 엔드포인트(/tts/output) 사용
+// 실서비스와 동일하게 /tts/resolve(presigned URL 반환)를 사용.
+// 데모 단어는 배치 prewarm으로 미리 생성돼 있어 비로그인도 cache-hit → url을 받아 직접 재생.
+// (미리 생성 안 된 텍스트는 비로그인이라 생성 경로를 못 타고 url이 없음 → 조용히 무음.)
 
 const BACKEND_URL = 'https://heyvoca-back.ghmate.com';
 
 let currentAudio: HTMLAudioElement | null = null;
-let currentAudioUrl: string | null = null;
 let currentRequestId = 0;
 let currentAudioResolve: (() => void) | null = null;
 
@@ -20,21 +21,21 @@ export async function getTextSound(text: string, lang: 'en' | 'ko' = 'en'): Prom
   stopCurrentSound();
 
   const requestId = ++currentRequestId;
-  const url = `${BACKEND_URL}/tts/output?text=${encodeURIComponent(text)}&language=${encodeURIComponent(lang)}`;
+  const url = `${BACKEND_URL}/tts/resolve?text=${encodeURIComponent(text)}&language=${encodeURIComponent(lang)}`;
 
   try {
     const res = await fetch(url, { method: 'GET' });
     if (!res.ok) {
-      console.error('TTS API 응답 오류:', res.status);
+      // 404(미캐시·비로그인) 등 — 무음으로 종료
       return;
     }
     if (requestId !== currentRequestId) return;
 
-    const blob = await res.blob();
+    const data = await res.json();
     if (requestId !== currentRequestId) return;
 
-    const audioUrl = URL.createObjectURL(blob);
-    currentAudioUrl = audioUrl;
+    const audioUrl: string | undefined = data && data.url;
+    if (!audioUrl) return;
 
     const audio = new Audio(audioUrl);
     currentAudio = audio;
@@ -44,8 +45,6 @@ export async function getTextSound(text: string, lang: 'en' | 'ko' = 'en'): Prom
 
       const cleanup = () => {
         if (currentAudio === audio) {
-          URL.revokeObjectURL(audioUrl);
-          currentAudioUrl = null;
           currentAudio = null;
         }
         if (currentAudioResolve === resolve) {
@@ -73,10 +72,6 @@ export function stopCurrentSound(): void {
     currentAudio.currentTime = 0;
     currentAudio.src = '';
     currentAudio = null;
-  }
-  if (currentAudioUrl) {
-    URL.revokeObjectURL(currentAudioUrl);
-    currentAudioUrl = null;
   }
   if (currentAudioResolve) {
     currentAudioResolve();
