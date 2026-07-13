@@ -6,6 +6,11 @@ services:
     restart: always
     networks:
       - nginx_proxy
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          cpus: "0.25"
 
 networks:
   nginx_proxy:
