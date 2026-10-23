@@ -929,7 +929,7 @@ export default function OcrSimulationDemo() {
                   <div className="flex items-center justify-between">
                     <span className="inline-flex items-center gap-[6px] rounded-full bg-primary-100 px-[10px] py-[3px] text-[10px] font-bold text-primary-700">
                       <span className="h-[6px] w-[6px] rounded-full bg-primary-500" />
-                      미학습
+                      새 단어
                     </span>
                     <button
                       type="button"

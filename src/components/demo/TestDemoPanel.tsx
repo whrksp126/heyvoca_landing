@@ -1,10 +1,11 @@
-// AI 추천 테스트 데모의 우측 사이드 패널 — 진행률, 문제 유형 분포, 단어별 진화
+// AI 추천 테스트 데모의 우측 사이드 패널 — 진행률, 문제 유형 분포, 단어별 성장
 // TestPlayDemo의 metrics를 받아 시각화
 
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EggCrack, Leaf, Plant, Carrot, Warning } from '@phosphor-icons/react';
 import TestPlayDemo, { type TestMetrics } from './TestPlayDemo';
+import { CropIcon } from './MemorizationStatus';
 import {
   demoWords,
   memoryStatusMeta,
@@ -30,10 +31,12 @@ function StatusIcon({ name, size = 12 }: { name: string; size?: number }) {
 }
 
 const TYPE_META: Record<string, { label: string; color: string }> = {
-  multipleChoice: { label: '4지선다', color: '#2E90FA' },
-  multipleChoiceListening: { label: '듣기 4지선다', color: '#7C3AED' },
+  multipleChoice: { label: '사지선다', color: '#2E90FA' },
+  multipleChoiceListening: { label: '사지선다(듣기)', color: '#7C3AED' },
   fillInTheBlank: { label: '빈칸 채우기', color: '#F79009' },
-  cardMatch: { label: '카드 매칭', color: '#FF70D4' },
+  fillInTheBlankTyping: { label: '빈칸 입력', color: '#0BA5EC' },
+  sentenceArrange: { label: '문장 만들기', color: '#22C55E' },
+  cardMatch: { label: '카드 맞추기', color: '#FF70D4' },
   cardMatchListening: { label: '듣기 매칭', color: '#22C55E' },
 };
 
@@ -72,7 +75,7 @@ function WordEvolutionList({ statusByWord, statusBefore }: { statusByWord: Recor
                   className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
                   style={{ backgroundColor: meta.bgColor, color: meta.color }}
                 >
-                  <StatusIcon name={meta.iconName} size={10} />
+                  <CropIcon status={after} size={14} />
                   {meta.label}
                 </motion.span>
               </AnimatePresence>
@@ -107,7 +110,7 @@ function WordEvolutionList({ statusByWord, statusBefore }: { statusByWord: Recor
                   className="ml-1 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold"
                   style={{ backgroundColor: memoryStatusMeta.overdue.bgColor, color: memoryStatusMeta.overdue.color }}
                 >
-                  지연
+                  목마름
                 </span>
               )}
             </div>
@@ -129,7 +132,7 @@ export default function TestDemoPanel() {
 
   const [m, setM] = useState<TestMetrics>({
     progressIndex: 0,
-    total: 14,
+    total: 9,
     statusByWord: initialStatus,
     typeCounts: {},
   });
@@ -179,9 +182,9 @@ export default function TestDemoPanel() {
         </div>
 
         <div className="card p-5">
-          <p className="text-caption font-semibold uppercase tracking-[0.12em] text-mute">단어별 진화</p>
+          <p className="text-caption font-semibold uppercase tracking-[0.12em] text-mute">단어별 성장</p>
           <p className="mt-1 text-caption text-mute">
-            정답일 때 해당 단어의 암기 단계가 한 칸씩 진화합니다.
+            맞히면 XP가 쌓여 작물이 한 단계씩 자라요.
           </p>
           <div className="mt-4">
             <WordEvolutionList statusByWord={m.statusByWord} statusBefore={initialStatus} />

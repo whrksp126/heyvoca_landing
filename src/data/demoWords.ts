@@ -1,5 +1,7 @@
-// 5단계 암기상태 타입 (heyvoca_front MemorizationStatus.jsx 출처)
-// unlearned: 미학습  / leaf: 단기암기 / plant: 중기암기 / carrot: 장기암기 / overdue: 복습 지연
+import { CROP_COLOR, CROP_LABEL, CROP_XP, type Crop } from './crop';
+
+// 데모 단어 상태 — 화면에는 작물 단계로 보인다(memoryStatusMeta 참고)
+// unlearned: 씨앗 / leaf: 새싹 / plant: 이파리 / carrot: 당근 / overdue: 목마른 작물
 export type MemoryStatus = 'unlearned' | 'leaf' | 'plant' | 'carrot' | 'overdue';
 
 export interface DemoWord {
@@ -35,7 +37,7 @@ export const demoWords: DemoWord[] = [
       en: 'She picked a red apple from the tree.',
       ko: '그녀는 나무에서 빨간 사과를 땄다.',
     },
-    badge: { tone: 'new', label: '미학습' },
+    badge: { tone: 'new', label: '씨앗' },
     status: 'unlearned',
     interval: 0,
     repetition: 0,
@@ -50,7 +52,7 @@ export const demoWords: DemoWord[] = [
       en: 'Her aspiration for fame drove her career.',
       ko: '명예에 대한 그녀의 열망이 경력을 이끌었다.',
     },
-    badge: { tone: 'new', label: '미학습' },
+    badge: { tone: 'new', label: '씨앗' },
     status: 'unlearned',
     interval: 0,
     repetition: 0,
@@ -65,7 +67,7 @@ export const demoWords: DemoWord[] = [
       en: 'Plastic waste is ubiquitous in the ocean.',
       ko: '플라스틱 쓰레기는 바다에 어디에나 존재한다.',
     },
-    badge: { tone: 'new', label: '미학습' },
+    badge: { tone: 'new', label: '씨앗' },
     status: 'unlearned',
     interval: 0,
     repetition: 0,
@@ -82,7 +84,7 @@ export const demoWords: DemoWord[] = [
       en: 'Rubber is more resilient than wood.',
       ko: '고무는 나무보다 탄력이 크다.',
     },
-    badge: { tone: 'review', label: '단기암기' },
+    badge: { tone: 'review', label: '새싹' },
     status: 'leaf',
     interval: 3,
     repetition: 1,
@@ -97,7 +99,7 @@ export const demoWords: DemoWord[] = [
       en: 'She accomplished her goal within a year.',
       ko: '그녀는 1년 안에 목표를 달성했다.',
     },
-    badge: { tone: 'review', label: '단기암기' },
+    badge: { tone: 'review', label: '새싹' },
     status: 'leaf',
     interval: 5,
     repetition: 2,
@@ -112,7 +114,7 @@ export const demoWords: DemoWord[] = [
       en: 'Their meeting was a result of pure serendipity.',
       ko: '그들의 만남은 순전한 우연한 행운의 결과였다.',
     },
-    badge: { tone: 'review', label: '단기암기' },
+    badge: { tone: 'review', label: '새싹' },
     status: 'leaf',
     interval: 7,
     repetition: 2,
@@ -129,7 +131,7 @@ export const demoWords: DemoWord[] = [
       en: 'They dedicated a memorial to the fallen soldiers.',
       ko: '그들은 전사한 병사들을 위해 기념비를 헌납했다.',
     },
-    badge: { tone: 'review', label: '중기암기' },
+    badge: { tone: 'review', label: '이파리' },
     status: 'plant',
     interval: 18,
     repetition: 3,
@@ -144,7 +146,7 @@ export const demoWords: DemoWord[] = [
       en: 'She endeavored to answer every question.',
       ko: '그녀는 모든 문제를 풀려고 노력했다.',
     },
-    badge: { tone: 'review', label: '중기암기' },
+    badge: { tone: 'review', label: '이파리' },
     status: 'plant',
     interval: 24,
     repetition: 3,
@@ -159,7 +161,7 @@ export const demoWords: DemoWord[] = [
       en: 'His enthusiasm for collecting stamps never faded.',
       ko: '우표 수집에 대한 그의 열정은 사그라들지 않았다.',
     },
-    badge: { tone: 'review', label: '중기암기' },
+    badge: { tone: 'review', label: '이파리' },
     status: 'plant',
     interval: 35,
     repetition: 4,
@@ -176,7 +178,7 @@ export const demoWords: DemoWord[] = [
       en: 'She gave me a book of poems for my birthday.',
       ko: '그녀는 내 생일에 시 책을 선물해 줬다.',
     },
-    badge: { tone: 'review', label: '장기암기' },
+    badge: { tone: 'review', label: '당근' },
     status: 'carrot',
     interval: 92,
     repetition: 6,
@@ -191,7 +193,7 @@ export const demoWords: DemoWord[] = [
       en: 'They went on a journey to the mountains.',
       ko: '그들은 산으로 여행을 떠났다.',
     },
-    badge: { tone: 'review', label: '장기암기' },
+    badge: { tone: 'review', label: '당근' },
     status: 'carrot',
     interval: 86,
     repetition: 5,
@@ -206,7 +208,7 @@ export const demoWords: DemoWord[] = [
       en: 'Her voice was mellifluous and soothed everyone.',
       ko: '그녀의 목소리는 달콤하고 유려해서 모두를 안심시켰다.',
     },
-    badge: { tone: 'review', label: '장기암기' },
+    badge: { tone: 'review', label: '당근' },
     status: 'carrot',
     interval: 120,
     repetition: 7,
@@ -223,7 +225,7 @@ export const demoWords: DemoWord[] = [
       en: 'Ephemeral insects live for only one day.',
       ko: '하루살이 곤충은 단 하루만 산다.',
     },
-    badge: { tone: 'review', label: '복습 지연' },
+    badge: { tone: 'review', label: '목마른 작물' },
     status: 'overdue',
     interval: 18,
     repetition: 4,
@@ -238,68 +240,75 @@ export const demoWords: DemoWord[] = [
       en: 'She achieved her goal through sheer perseverance.',
       ko: '그녀는 순전한 인내심으로 목표를 달성했다.',
     },
-    badge: { tone: 'review', label: '복습 지연' },
+    badge: { tone: 'review', label: '목마른 작물' },
     status: 'overdue',
     interval: 22,
     repetition: 4,
   },
 ];
 
-// 5단계 상태 메타데이터 — 컴포넌트에서 공통으로 사용
+// 상태 메타데이터 — 실서비스 당근 농장 작물 단계로 표시한다(data/crop.ts).
+// 데모 내부 키는 옛 이름을 유지하고, 화면에는 작물로 매핑한다.
+//   unlearned → 씨앗 / leaf → 새싹 / plant → 이파리 / carrot → 당근 / overdue → 목마른 작물(복습할 때가 지남)
 export interface MemoryStatusMeta {
   id: MemoryStatus;
+  crop: Crop;
+  thirsty: boolean;
   label: string;
   description: string;
   color: string;
   bgColor: string;
-  // Phosphor 아이콘 이름 (컴포넌트에서 동적 import)
-  iconName: 'EggCrack' | 'Leaf' | 'Plant' | 'Carrot' | 'Warning';
 }
 
 export const memoryStatusMeta: Record<MemoryStatus, MemoryStatusMeta> = {
   unlearned: {
     id: 'unlearned',
-    label: '미학습',
-    description: '아직 만나본 적 없는 단어',
-    color: '#9D835A',
+    crop: 'seed',
+    thirsty: false,
+    label: CROP_LABEL.seed,
+    description: '새로 심은 단어',
+    color: CROP_COLOR.seed,
     bgColor: '#FFFCF3',
-    iconName: 'EggCrack',
   },
   leaf: {
     id: 'leaf',
-    label: '단기암기',
-    description: '며칠 안에 다시 보면 좋아요',
-    color: '#77CE4F',
+    crop: 'sprout',
+    thirsty: false,
+    label: CROP_LABEL.sprout,
+    description: `${CROP_XP.sprout} XP — 싹이 텄어요`,
+    color: CROP_COLOR.sprout,
     bgColor: '#F2FFEB',
-    iconName: 'Leaf',
   },
   plant: {
     id: 'plant',
-    label: '중기암기',
-    description: '한 달 가까이 기억이 유지돼요',
-    color: '#38CE38',
+    crop: 'leaf',
+    thirsty: false,
+    label: CROP_LABEL.leaf,
+    description: `${CROP_XP.leaf} XP — 잎이 무성해졌어요`,
+    color: CROP_COLOR.leaf,
     bgColor: '#EBFFEE',
-    iconName: 'Plant',
   },
   carrot: {
     id: 'carrot',
-    label: '장기암기',
-    description: '두 달 이상 단단히 자리잡았어요',
-    color: '#F68300',
+    crop: 'carrot',
+    thirsty: false,
+    label: CROP_LABEL.carrot,
+    description: `${CROP_XP.carrot} XP — 당근이 여물었어요`,
+    color: CROP_COLOR.carrot,
     bgColor: '#FFF8E8',
-    iconName: 'Carrot',
   },
   overdue: {
     id: 'overdue',
-    label: '복습 지연',
-    description: '예정일이 지났어요',
+    crop: 'sprout',
+    thirsty: true,
+    label: '목마른 작물',
+    description: '복습할 때가 됐어요',
     color: '#F26A6A',
     bgColor: '#FFE9E9',
-    iconName: 'Warning',
   },
 };
 
-// 상태별 라벨 (간단 조회용)
+// 성장 순서
 export const memoryStatusOrder: MemoryStatus[] = [
   'unlearned',
   'leaf',
@@ -307,21 +316,22 @@ export const memoryStatusOrder: MemoryStatus[] = [
   'carrot',
 ];
 
-// 정답(완벽) 시 다음 상태
+// 정답 시 다음 상태 — 목마른 작물은 물을 주면 다시 건강해진다
 export function nextStatusOnGood(status: MemoryStatus): MemoryStatus {
-  if (status === 'overdue') return 'leaf'; // overdue는 복귀 시 leaf
+  if (status === 'overdue') return 'leaf';
   const idx = memoryStatusOrder.indexOf(status);
   if (idx === -1) return status;
   if (idx >= memoryStatusOrder.length - 1) return 'carrot';
   return memoryStatusOrder[idx + 1];
 }
 
-// 오답(모르겠음) 시 다음 상태
-// 학습을 한 번이라도 했으면 미학습으로 떨어지지 않음 — 최소 단기암기(leaf) 유지
+// 오답 시 — 실서비스처럼 XP 는 줄어도 지금 단계 아래로는 내려가지 않는다
 export function nextStatusOnBad(status: MemoryStatus): MemoryStatus {
-  if (status === 'overdue') return 'leaf'; // overdue에서 오답 → leaf
-  if (status === 'unlearned') return 'leaf'; // 미학습이라도 학습 시도했으니 leaf 진입
-  const idx = memoryStatusOrder.indexOf(status);
-  if (idx <= 1) return 'leaf'; // leaf 이하는 leaf 유지
-  return memoryStatusOrder[idx - 1];
+  if (status === 'overdue') return 'leaf';
+  return status;
+}
+
+// 데모용 XP 증감 — 실서비스 문턱(data/crop.ts)에 맞춘 표시값
+export function xpOf(status: MemoryStatus): number {
+  return CROP_XP[memoryStatusMeta[status].crop];
 }

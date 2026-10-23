@@ -1,0 +1,64 @@
+---
+// 지금 앱 화면 둘러보기 — 실제 앱 캡처(public/images/app/*.webp)를 기기 프레임에 담아 보여준다.
+// 원본은 스토어 스크린샷과 같은 세트(heyvoca_service/scripts/store/screenshots/<세트>/src). 화면이 바뀌면 둘 다 갱신.
+const screens = [
+  { src: '/images/app/home-farm.webp', tag: '당근 농장', title: '단어를 심으면 기억이 자라요', desc: '외운 단어가 농장의 작물로 자라고, 돌볼 작물은 홈에서 한눈에 보여요.' },
+  { src: '/images/app/today-streak.webp', tag: '오늘 할 일', title: '할 일만 끝내면 연속 기록 완성', desc: '불꽃 달력으로 매일을 확인하고, 쉬는 날엔 보호권이 연속 기록을 지켜줘요.' },
+  { src: '/images/app/plant-seed.webp', tag: '새 씨앗 심기', title: '새 단어는 하루 10개씩', desc: '뜻·예문·발음으로 만나고 여러 문제로 익히며 밭에 심어요.' },
+  { src: '/images/app/fill-blank.webp', tag: '빈칸 채우기', title: '예문 속에서 바로 써보기', desc: '뜻만 외우지 않고 문장 안에서 알맞은 단어를 골라요.' },
+  { src: '/images/app/blank-typing.webp', tag: '직접 입력', title: '고르기에서 쓰기로', desc: '익숙해질수록 보기 없이 직접 입력하고 문장을 만들어요.' },
+  { src: '/images/app/word-xp.webp', tag: '작물 XP', title: '맞힐 때마다 XP가 쌓여요', desc: '씨앗 → 새싹 → 이파리 → 당근. 단어마다 성장 단계와 학습 기록이 남아요.' },
+  { src: '/images/app/bookstore.webp', tag: '서점 단어장', title: '검증된 단어장으로 바로 시작', desc: '기초부터 수능·토익·비즈니스까지 골라 담아요.' },
+  { src: '/images/app/jlpt.webp', tag: '일본어', title: '일본어도 JLPT 단어장으로', desc: 'N5부터 N1까지, 후리가나와 발음까지 함께 배워요.' },
+];
+---
+
+<section id="tour" class="section bg-white" aria-labelledby="tour-h2">
+  <div class="container-content">
+    <div class="max-w-3xl" data-reveal>
+      <span class="eyebrow">
+        <span class="h-1.5 w-1.5 rounded-full bg-primary-500"></span>
+        지금의 앱 화면
+      </span>
+      <h2
+        id="tour-h2"
+        class="mt-6 text-balance text-[36px] font-bold leading-[1.12] tracking-tight text-ink md:text-display-lg lg:text-display-xl"
+      >
+        심고, 물 주고, 키우는<br />
+        <span class="text-primary-500">단어 농장</span>.
+      </h2>
+      <p class="mt-6 max-w-prose text-body-lg text-sub text-pretty">
+        복습할 때가 된 단어는 목마른 작물이 됩니다. 오늘 할 일만 챙기면 단어가 씨앗에서 당근까지 자라요.
+      </p>
+    </div>
+
+    <ul
+      class="-mx-4 mt-12 flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pb-4 md:mx-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-12 md:overflow-visible md:px-0 lg:grid-cols-4"
+      data-reveal
+    >
+      {screens.map((s) => (
+        <li class="w-[240px] shrink-0 snap-center md:w-auto">
+          <div class="mx-auto aspect-[9/19] w-full max-w-[240px] rounded-[34px] bg-ink p-[5px] shadow-card">
+            <div class="relative h-full w-full overflow-hidden rounded-[29px] bg-white">
+              <div class="absolute left-1/2 top-[7px] z-10 h-[18px] w-[70px] -translate-x-1/2 rounded-full bg-ink"></div>
+              <img
+                src={s.src}
+                alt={`${s.tag} 화면`}
+                width="828"
+                height="1792"
+                class="absolute inset-x-0 top-[18px] h-auto w-full"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          </div>
+          <div class="mx-auto mt-5 max-w-[240px]">
+            <span class="text-body-sm font-semibold text-primary-500">{s.tag}</span>
+            <h3 class="mt-1 text-[18px] font-bold leading-snug text-ink">{s.title}</h3>
+            <p class="mt-2 text-body-sm text-sub text-pretty">{s.desc}</p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>

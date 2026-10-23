@@ -1,96 +1,46 @@
-// 실서비스 heyvoca_front/src/components/common/MemorizationStatus.jsx 의 TSX 포팅 (정적 표시 모드만)
-// 5단계: unlearned / leaf / plant / carrot + overdue 오버라이드
-// 색상·아이콘·텍스트 모두 실서비스와 동일
+// 단어 상태 배지 — 실서비스 당근 농장 작물 그림 + 단계 이름.
+// (옛 '미학습/단기암기/중기암기/장기암기' 배지를 대체. 매핑은 data/demoWords.ts memoryStatusMeta)
 
-import { Leaf, Plant, Carrot, EggCrack } from '@phosphor-icons/react';
+import { memoryStatusMeta, type MemoryStatus } from '../../data/demoWords';
+import { cropImage } from '../../data/crop';
 
-export type MemoryStatus = 'unlearned' | 'leaf' | 'plant' | 'carrot' | 'overdue';
+export type { MemoryStatus };
 
-interface StatusStyle {
-  border: string;
-  text: string;
-  bg: string;
-  icon: React.ReactNode;
+/** 작물 그림 한 장 */
+export function CropIcon({ status, size = 16 }: { status: MemoryStatus; size?: number }) {
+  const meta = memoryStatusMeta[status];
+  return (
+    <img
+      src={cropImage(meta.crop, { thirsty: meta.thirsty })}
+      alt=""
+      aria-hidden
+      width={size}
+      height={size}
+      className="shrink-0 select-none object-contain"
+      style={{ width: size, height: size }}
+      draggable={false}
+    />
+  );
 }
-
-const baseStyles: Record<Exclude<MemoryStatus, 'overdue'>, StatusStyle> = {
-  unlearned: {
-    border: '#9D835A',
-    text: '#9D835A',
-    bg: '#FFFCF3',
-    icon: <EggCrack size={10} weight="fill" />,
-  },
-  leaf: {
-    border: '#77CE4F',
-    text: '#77CE4F',
-    bg: '#F2FFEB',
-    icon: <Leaf size={10} weight="fill" />,
-  },
-  plant: {
-    border: '#38CE38',
-    text: '#38CE38',
-    bg: '#EBFFEE',
-    icon: <Plant size={10} weight="fill" />,
-  },
-  carrot: {
-    border: '#F68300',
-    text: '#F68300',
-    bg: '#FFF8E8',
-    icon: <Carrot size={10} weight="fill" />,
-  },
-};
-
-const overdueOverride = {
-  border: '#F26A6A',
-  text: '#F26A6A',
-  bg: '#FFE9E9',
-};
-
-const STATUS_LABELS: Record<MemoryStatus, string> = {
-  unlearned: '미학습',
-  leaf: '단기암기',
-  plant: '중기암기',
-  carrot: '장기암기',
-  overdue: '복습 지연',
-};
 
 interface MemorizationStatusProps {
   status: MemoryStatus;
-  /** 아이콘만 표시 (작은 원형 뱃지) */
+  /** 그림만 표시 */
   iconOnly?: boolean;
-  /** 라벨 텍스트 강제 지정 (예: '복습 지연' 동적 변경) */
+  /** 라벨 텍스트 강제 지정 */
   forceLabel?: string;
 }
 
 export default function MemorizationStatus({ status, iconOnly = false, forceLabel }: MemorizationStatusProps) {
-  const isOverdue = status === 'overdue';
-  const baseKey: Exclude<MemoryStatus, 'overdue'> = isOverdue ? 'leaf' : status;
-  const base = baseStyles[baseKey];
-
-  const styles: StatusStyle = isOverdue
-    ? { ...base, ...overdueOverride }
-    : base;
-
-  const label = forceLabel ?? STATUS_LABELS[status];
-
-  if (iconOnly) {
-    return (
-      <div
-        className="flex h-[18px] w-[18px] items-center justify-center rounded-full border"
-        style={{ borderColor: styles.border, backgroundColor: styles.bg, color: styles.text }}
-      >
-        {styles.icon}
-      </div>
-    );
-  }
-
+  const meta = memoryStatusMeta[status];
+  if (iconOnly) return <CropIcon status={status} size={18} />;
   return (
     <div
-      className="flex w-max items-center gap-[3px] rounded-[50px] border px-[5px] py-[3px] text-[10px] font-semibold"
-      style={{ borderColor: styles.border, backgroundColor: styles.bg, color: styles.text }}
+      className="flex w-max items-center gap-[3px] rounded-[50px] px-[6px] py-[2px] text-[10px] font-semibold"
+      style={{ backgroundColor: meta.bgColor, color: meta.color }}
     >
-      {styles.icon}
-      <span>{label}</span>
+      <CropIcon status={status} size={14} />
+      <span>{forceLabel ?? meta.label}</span>
     </div>
   );
 }

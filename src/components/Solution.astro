@@ -1,7 +1,6 @@
 ---
-// 통합 섹션: "같은 단어도, 시간이 지나면 다르게 보입니다."
-// 좌측 헤딩 + 본문 (이전 MemoryStatesShowcase에서 흡수)
-// 우측 5단계 진화 데모 (한 단어가 5단계를 순차 진화)
+// 작물 성장 섹션 — 단어마다 XP 가 쌓여 씨앗에서 황금 당근까지 자란다.
+// 우측: 작물 성장 데모(스크롤에 따라 XP 상승)
 import MemoryEvolutionDemo from './demo/MemoryEvolutionDemo';
 ---
 
@@ -11,21 +10,22 @@ import MemoryEvolutionDemo from './demo/MemoryEvolutionDemo';
     <div class="lg:col-span-7 lg:sticky lg:top-24" data-reveal>
       <span class="eyebrow">
         <span class="h-1.5 w-1.5 rounded-full bg-primary-500"></span>
-        암기 상태 관리
+        작물 성장 · XP
       </span>
       <h2
         id="solution-h2"
         class="mt-6 text-balance text-[36px] font-bold leading-[1.12] tracking-tight text-ink md:text-display-lg lg:text-display-xl"
       >
-        같은 단어도, 시간이<br />
-        지나면 다르게 보입니다.
+        단어 하나하나가<br />
+        <span class="text-primary-500">작물</span>로 자랍니다.
       </h2>
       <p class="mt-6 max-w-prose text-body-lg text-sub text-pretty">
-        단어마다 지금 어디쯤에 있는지, 다음에 언제 보여줘야 하는지 헤이보카가 정확히 알고 있습니다.
+        맞힐 때마다 XP가 쌓이고, 문턱을 넘으면 씨앗 → 새싹 → 이파리 → 당근 → 황금 당근으로 자라요.
+        XP는 그 단어를 기억할 수 있는 날수에서 나오는 값이라, 작물이 클수록 오래 기억한다는 뜻이에요.
       </p>
     </div>
 
-    {/* 우측: 5단계 진화 데모 (React island) */}
+    {/* 우측: 작물 성장 데모 (React island) */}
     <div class="lg:col-span-5" data-reveal>
       <MemoryEvolutionDemo client:visible />
     </div>

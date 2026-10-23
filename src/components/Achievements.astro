@@ -1,12 +1,13 @@
 ---
+// 실서비스 업적 6종 — heyvoca_front components/achievement/achievementMeta.js ACHIEVEMENT_TYPES
+// 레벨이 오를수록 메달이 동 → 은 → 금 → 무지개로 바뀐다(achievementTier).
 const kings = [
-  { src: '/images/AttendanceKing.png', name: '출석왕', desc: '연속 출석으로 만나요' },
-  { src: '/images/MemorizedKing.png', name: '암기왕', desc: '많은 단어를 완벽 암기' },
-  { src: '/images/PerseveranceKing.png', name: '끈기왕', desc: '매일 한 발씩 꾸준히' },
-  { src: '/images/WordKing.png', name: '단어왕', desc: '학습 누적량의 정점' },
-  { src: '/images/ReadingKing.png', name: '독서왕', desc: '책 속 단어를 모은 자' },
-  { src: '/images/NoryeokKing.png', name: '노력왕', desc: '일일 미션 완수자' },
-  { src: '/images/InviteKing.png', name: '초대왕', desc: '함께 배우는 즐거움' },
+  { src: '/images/AttendanceKing.png', name: '출석왕', desc: '매일 학습하러 오면' },
+  { src: '/images/PerseveranceKing.png', name: '끈기왕', desc: '연속 학습을 이어가면' },
+  { src: '/images/NoryeokKing.png', name: '노력왕', desc: '학습을 거듭할수록' },
+  { src: '/images/MemorizedKing.png', name: '암기왕', desc: '연속으로 맞힌 최고 콤보' },
+  { src: '/images/ReadingKing.png', name: '독서왕', desc: '서점 단어장을 담을수록' },
+  { src: '/images/InviteKing.png', name: '초대왕', desc: '친구를 초대하면' },
 ];
 ---
 
@@ -22,15 +23,15 @@ const kings = [
         class="mt-6 text-balance text-[36px] font-bold leading-[1.12] tracking-tight text-ink md:text-display-lg lg:text-display-xl"
       >
         당신의 학습엔,<br />
-        <span class="font-display text-primary-500">왕좌</span>가 일곱 자리 있습니다.
+        <span class="font-display text-primary-500">왕좌</span>가 여섯 자리 있습니다.
       </h2>
       <p class="mt-6 text-body-lg text-sub text-pretty">
-        출석 · 암기 · 끈기 · 단어 · 독서 · 노력 · 초대 — 모든 노력을 기록하고, 작은 즐거움으로 돌려드립니다.
+        출석 · 끈기 · 노력 · 암기 · 독서 · 초대 — 레벨이 오를 때마다 보석을 받고, 메달은 동 · 은 · 금 · 무지개로 빛나요.
       </p>
     </div>
 
     <ul
-      class="mt-16 grid grid-cols-3 gap-x-6 gap-y-10 md:grid-cols-4 lg:grid-cols-7 lg:gap-x-4"
+      class="mt-16 grid grid-cols-3 gap-x-6 gap-y-10 md:grid-cols-6 lg:gap-x-4"
       data-reveal-stagger
       data-stagger-ms="80"
     >

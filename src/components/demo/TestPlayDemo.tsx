@@ -1,40 +1,49 @@
-// AI 추천 테스트 데모 — 실서비스 takeTest/Main.jsx 및 question plugins 기반 5가지 문제 유형 인터랙티브
-// 14문제 풀이형, 정답/오답 피드백, 결과 화면
+// 복습 테스트 데모 — 실서비스 takeTest/Main.jsx 및 question plugins 기반 인터랙티브
+// 사지선다 · 듣기 · 빈칸 채우기 · 빈칸 입력 · 문장 만들기 · 카드 맞추기, 채점 후 작물 XP 표시, 결과 화면
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Circle, X, Check, SpeakerHigh, HandsClapping, Leaf, Plant, Carrot, EggCrack, Trophy, Sparkle, Target, Diamond } from '@phosphor-icons/react';
+import { Circle, X, SpeakerHigh } from '@phosphor-icons/react';
 import { buildTestQuestions, TOTAL_WORDS, wordCountOf, type TestQuestion, type Option as QOption } from '../../data/testQuestions';
 import type { DemoWord, MemoryStatus } from '../../data/demoWords';
-import { demoWords, nextStatusOnGood, nextStatusOnBad } from '../../data/demoWords';
-import MemorizationStatus from './MemorizationStatus';
+import { demoWords, nextStatusOnGood, nextStatusOnBad, memoryStatusMeta } from '../../data/demoWords';
+import { CropIcon } from './MemorizationStatus';
+import { KoPromptCard, FillTypingView, SentenceArrangeView, splitAtWord } from './OutputQuestions';
 import { getTextSound, stopCurrentSound } from '../../utils/tts';
 import { playSuccessSound, playErrorSound } from '../../utils/sound';
 
-// 실서비스 stateNameMap + 색상 (MemorizationStatus와 동일)
+// 작물 단계 이름·색 — data/demoWords.ts memoryStatusMeta (실서비스 utils/crop.js 와 같은 값)
 const STATE_NAME: Record<MemoryStatus, string> = {
-  unlearned: '미학습',
-  leaf: '단기 암기',
-  plant: '중기 암기',
-  carrot: '장기 암기',
-  overdue: '복습 지연',
+  unlearned: memoryStatusMeta.unlearned.label,
+  leaf: memoryStatusMeta.leaf.label,
+  plant: memoryStatusMeta.plant.label,
+  carrot: memoryStatusMeta.carrot.label,
+  overdue: memoryStatusMeta.overdue.label,
 };
 
-const STATE_COLOR: Record<MemoryStatus, { border: string; text: string; bg: string; icon: React.ReactNode }> = {
-  unlearned: { border: '#9D835A', text: '#9D835A', bg: '#FFFCF3', icon: <EggCrack size={10} weight="fill" /> },
-  leaf: { border: '#77CE4F', text: '#77CE4F', bg: '#F2FFEB', icon: <Leaf size={10} weight="fill" /> },
-  plant: { border: '#38CE38', text: '#38CE38', bg: '#EBFFEE', icon: <Plant size={10} weight="fill" /> },
-  carrot: { border: '#F68300', text: '#F68300', bg: '#FFF8E8', icon: <Carrot size={10} weight="fill" /> },
-  overdue: { border: '#F26A6A', text: '#F26A6A', bg: '#FFE9E9', icon: <Leaf size={10} weight="fill" /> },
+const stateColor = (st: MemoryStatus) => {
+  const m = memoryStatusMeta[st];
+  return { border: m.color, text: m.color, bg: m.bgColor, icon: <CropIcon status={st} size={14} /> };
+};
+const STATE_COLOR: Record<MemoryStatus, ReturnType<typeof stateColor>> = {
+  unlearned: stateColor('unlearned'),
+  leaf: stateColor('leaf'),
+  plant: stateColor('plant'),
+  carrot: stateColor('carrot'),
+  overdue: stateColor('overdue'),
 };
 
-// 단계별 정답 시 권장 복습 간격(일) — 실서비스 FSRS 추정 유사
-const NEXT_REVIEW_DAYS_BY_STATE: Record<MemoryStatus, number> = {
-  unlearned: 1,
-  leaf: 3,
-  plant: 14,
-  carrot: 60,
-  overdue: 1,
+// 채점 후 XP 증감(데모 표시값) — 실서비스는 기억 1일 = 10 XP. 오래 기억한 단어일수록 크게 오른다.
+// 오답은 깎이지만 지금 단계 시작점 아래로는 안 내려간다(단계 유지).
+const XP_ON_CORRECT: Record<MemoryStatus, number> = { unlearned: 30, leaf: 80, plant: 190, carrot: 420, overdue: 40 };
+const XP_ON_WRONG: Record<MemoryStatus, number> = { unlearned: 0, leaf: -10, plant: -40, carrot: -90, overdue: 0 };
+const xpDeltaOf = (st: MemoryStatus, correct: boolean) => (correct ? XP_ON_CORRECT[st] : XP_ON_WRONG[st]);
+
+// 받침에 따라 '로/으로'
+const withRo = (noun: string) => {
+  const code = noun.charCodeAt(noun.length - 1) - 0xac00;
+  const jong = code >= 0 && code <= 11171 ? code % 28 : 0;
+  return `${noun}${jong && jong !== 8 ? '으로' : '로'}`;
 };
 
 interface MemoryStateChange {
@@ -51,13 +60,6 @@ function getDisplayMeanings(meanings: string[]): string[] {
   if (uniq.length <= 2) return uniq;
   const count = Math.random() < 0.5 ? 2 : Math.min(3, uniq.length);
   return uniq.sort(() => Math.random() - 0.5).slice(0, count);
-}
-
-// 예문에서 단어를 ___ 로 치환 (단어/활용형 모두 매칭)
-function replaceWordWithBlank(sentence: string, word: string): string {
-  const root = word.replace(/(ing|ed|s|ies|er|est)$/i, '');
-  const re = new RegExp(`\\b(${word}|${root}\\w*)\\b`, 'i');
-  return sentence.replace(re, '_____');
 }
 
 // ──────────────────────────────────────────────────────────────────
@@ -148,24 +150,15 @@ interface MCProps {
   onSpeak: () => void;
   isSpeaking: boolean;
   memoryStateChange: MemoryStateChange | null;
-  nextReviewDays: number | null;
+  xpDelta: number | null;
 }
-
-// 상태 rank — 상승/하락 판정용
-const STATE_RANK_GLOBAL: Record<MemoryStatus, number> = {
-  overdue: -1,
-  unlearned: 0,
-  leaf: 1,
-  plant: 2,
-  carrot: 3,
-};
 
 function MemoryStateChangeBadge({ change }: { change: MemoryStateChange }) {
   const c = STATE_COLOR[change.to];
-  const isDowngrade = STATE_RANK_GLOBAL[change.to] < STATE_RANK_GLOBAL[change.from];
-  const message = isDowngrade
-    ? `${STATE_NAME[change.to]}로 하락`
-    : `${STATE_NAME[change.to]}로 상승!`;
+  // 실서비스 FarmStatusBar 문구 — 단계가 오르면 "…로 자랐어요", 목마른 작물이 살아나면 "되살아났어요"
+  const message = change.from === 'overdue'
+    ? '물을 줘서 되살아났어요'
+    : `${withRo(STATE_NAME[change.to])} 자랐어요`;
   return (
     <motion.div
       className="flex items-center gap-[3px] overflow-hidden whitespace-nowrap rounded-[50px] border px-[8px] py-[3px] text-[10px] font-semibold"
@@ -186,19 +179,27 @@ function MemoryStateChangeBadge({ change }: { change: MemoryStateChange }) {
   );
 }
 
-function NextReviewBadge({ days }: { days: number }) {
-  // 실서비스 토큰: bg-primary-main-200 (#FFD7F3), text-primary-main-600 (#FF70D4)
+function XpBadge({ delta }: { delta: number }) {
+  // 실서비스 FarmStatusBar 배지 — 정답 +XP(분홍), 오답 −XP(회색)
+  const up = delta > 0;
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-      className="flex h-[18px] items-center justify-center whitespace-nowrap rounded-[3px] px-[6px] text-[10px] font-semibold"
-      style={{ backgroundColor: '#FFD7F3', color: '#FF70D4' }}
+      className="flex h-[20px] items-center justify-center whitespace-nowrap rounded-full px-[8px] text-[11px] font-bold tabular-nums"
+      style={up ? { backgroundColor: '#FFD7F3', color: '#FF70D4' } : { backgroundColor: '#EDEDED', color: '#7B7B7B' }}
     >
-      {days}일 후 복습 예정
+      {up ? `+${delta}` : delta === 0 ? '+0' : `−${Math.abs(delta)}`} XP
     </motion.div>
   );
+}
+
+// 출력형 문제(빈칸 입력·문장 만들기) 채점 피드백 — 단계 변화가 있으면 그 배지, 없으면 XP 배지
+function AnswerFeedback({ change, delta }: { change: MemoryStateChange | null; delta: number | null }) {
+  if (change) return <MemoryStateChangeBadge change={change} />;
+  if (delta != null) return <XpBadge delta={delta} />;
+  return null;
 }
 
 function MultipleChoiceCard({
@@ -211,7 +212,7 @@ function MultipleChoiceCard({
   onSpeak,
   isSpeaking,
   memoryStateChange,
-  nextReviewDays,
+  xpDelta,
 }: MCProps) {
   const isListening = question.questionType === 'multipleChoiceListening';
   return (
@@ -228,10 +229,10 @@ function MultipleChoiceCard({
             <MemoryStateChangeBadge change={memoryStateChange} />
           </div>
         )}
-        {/* 하단 중앙 — 채점 후 복습 예정일 뱃지 (변경 배지와 동시 표시) */}
-        {isAnswered && nextReviewDays != null && (
+        {/* 하단 중앙 — 채점 후 XP 증감 배지 */}
+        {isAnswered && xpDelta != null && (
           <div className="absolute bottom-[15px] left-1/2 z-[2] -translate-x-1/2">
-            <NextReviewBadge days={nextReviewDays} />
+            <XpBadge delta={xpDelta} />
           </div>
         )}
 
@@ -294,15 +295,12 @@ interface FillProps {
   isAnswered: boolean;
   onSelect: (i: number) => void;
   memoryStateChange: MemoryStateChange | null;
-  nextReviewDays: number | null;
+  xpDelta: number | null;
 }
 
-function FillBlankCard({ question, userSelected, isCorrect, isAnswered, onSelect, memoryStateChange, nextReviewDays }: FillProps) {
+function FillBlankCard({ question, userSelected, isCorrect, isAnswered, onSelect, memoryStateChange, xpDelta }: FillProps) {
   const word = question.word!;
-  const blanked = replaceWordWithBlank(word.example.en, word.word);
-  const parts = blanked.split('_____');
-  const before = parts[0] ?? '';
-  const after = parts[1] ?? '';
+  const [before, blankWord, after] = splitAtWord(word.example.en, word.word);
 
   // 빈칸 박스 스타일 — 실서비스와 동일 토큰
   let blankClass = 'border-[#CCCCCC] bg-white text-ink';
@@ -314,49 +312,32 @@ function FillBlankCard({ question, userSelected, isCorrect, isAnswered, onSelect
 
   return (
     <div className="flex h-full flex-col gap-[15px]">
-      {/* 한국어 + 영어 예문 통합 영역 (채점 피드백 기준점) */}
-      <div className="relative flex h-full flex-col overflow-hidden rounded-[12px]">
-        {/* 한국어 예문 — primary-main-50 #FFF4FC */}
-        <div
-          className="flex min-h-[72px] items-center px-[20px] py-[15px]"
-          style={{ backgroundColor: '#FFF4FC' }}
-        >
-          <p className="text-[14px] font-normal text-ink">{word.example.ko}</p>
-        </div>
+      {/* 위: 한국어 예문(분홍 카드) — 실서비스 fillInTheBlank 와 같은 배치 */}
+      <KoPromptCard word={word} />
 
-        {/* 영어 예문 + 빈칸 박스 — bg-layout-gray-50 #F5F5F5 */}
-        <div
-          className="relative flex-1 px-[20px] py-[15px]"
-          style={{ backgroundColor: '#F5F5F5' }}
-        >
-          <p
-            className="relative z-[2] text-[16px] font-normal text-ink"
-            style={{ lineHeight: '2.2' }}
+      {/* 아래: 영어 예문 + 빈칸 박스 (채점 피드백 기준점) */}
+      <div className="relative flex flex-1 items-center overflow-hidden rounded-[12px] bg-[#F5F5F5] px-[18px] py-[15px]">
+        <p className="relative z-[2] text-[18px] font-bold text-ink" style={{ lineHeight: '2.1' }}>
+          {before}
+          <span
+            className={`inline-flex h-[32px] min-w-[80px] items-center justify-center rounded-[8px] border px-[12px] align-middle text-[16px] font-bold transition-all duration-200 ${blankClass}`}
           >
-            {before}
-            <span
-              className={`inline-flex h-[25px] min-w-[70px] items-center justify-center rounded-[5px] border px-[15px] align-middle text-[15px] font-semibold transition-all duration-200 ${blankClass}`}
-            >
-              {isAnswered ? word.word : ''}
-            </span>
-            {after}
-          </p>
-        </div>
+            {isAnswered ? blankWord : ''}
+          </span>
+          {after}
+        </p>
 
-        {/* O/X 오버레이 — 통합 카드 영역(한국어+영문) 중앙, 빈칸 박스보다 위(z-[5]) */}
         <ResultOverlay isCorrect={isCorrect} />
 
-        {/* 암기 상태 변경 배지 — 통합 영역 상단 중앙 (한국어+영문 박스 기준) */}
+        {/* 채점 후 — 작물 단계 변화(위) · XP 증감(아래) */}
         {isAnswered && memoryStateChange && (
           <div className="absolute left-1/2 top-[12px] z-[3] -translate-x-1/2 whitespace-nowrap">
             <MemoryStateChangeBadge change={memoryStateChange} />
           </div>
         )}
-
-        {/* 복습 예정일 — 통합 영역 하단 중앙 (변경 배지와 동시 표시) */}
-        {isAnswered && nextReviewDays != null && (
+        {isAnswered && xpDelta != null && (
           <div className="absolute bottom-[12px] left-1/2 z-[3] -translate-x-1/2">
-            <NextReviewBadge days={nextReviewDays} />
+            <XpBadge delta={xpDelta} />
           </div>
         )}
       </div>
@@ -549,7 +530,6 @@ function CardMatchCard({ question, isListening, currentStatusByWord, onWordResol
                 {resolved && (
                   <div className="absolute left-0 right-0 top-[8px] z-[2] flex justify-center">
                     {resolved.changed ? (() => {
-                      const isDown = STATE_RANK_GLOBAL[resolved.newState] < STATE_RANK_GLOBAL[resolved.prevState];
                       return (
                       <motion.div
                         className="flex items-center gap-[3px] overflow-hidden whitespace-nowrap rounded-[50px] border px-[6px] py-[2px] text-[9px] font-semibold"
@@ -564,7 +544,7 @@ function CardMatchCard({ question, isListening, currentStatusByWord, onWordResol
                       >
                         <span className="shrink-0">{STATE_COLOR[resolved.newState].icon}</span>
                         <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
-                          {STATE_NAME[resolved.newState]} {isDown ? '하락' : '진화!'}
+                          {resolved.prevState === 'overdue' ? '되살아났어요' : `${withRo(STATE_NAME[resolved.newState])} 자랐어요`}
                         </motion.span>
                       </motion.div>
                       );
@@ -590,7 +570,7 @@ function CardMatchCard({ question, isListening, currentStatusByWord, onWordResol
                   {isListening ? <SpeakerHigh size={22} weight="fill" color="#FF70D4" /> : c.word}
                 </span>
 
-                {/* 하단 — 복습 예정일 (채점 후, 정답/오답 무관 항상 표시) */}
+                {/* 하단 — XP 증감 (채점 후) */}
                 {resolved && (
                   <div className="absolute bottom-[8px] left-0 right-0 z-[2] flex justify-center">
                     <motion.div
@@ -600,7 +580,7 @@ function CardMatchCard({ question, isListening, currentStatusByWord, onWordResol
                       className="flex h-[18px] items-center justify-center whitespace-nowrap rounded-[3px] px-[6px] text-[10px] font-semibold"
                       style={{ backgroundColor: '#FFD7F3', color: '#FF70D4' }}
                     >
-                      {NEXT_REVIEW_DAYS_BY_STATE[resolved.newState] ?? 1}일 후 복습
+                      {(() => { const d = xpDeltaOf(resolved.prevState, resolved.isCorrect); return d > 0 ? `+${d} XP` : d === 0 ? '+0 XP' : `−${Math.abs(d)} XP`; })()}
                     </motion.div>
                   </div>
                 )}
@@ -647,7 +627,7 @@ interface ResultScreenProps {
   onExit: () => void;
 }
 
-type ResultSlideType = 'newWords' | 'memoryImproved' | 'dailyMission' | 'achievement' | 'gem' | 'result';
+type ResultSlideType = 'farmGrowth' | 'combo' | 'achievement' | 'gem' | 'result';
 
 interface ResultSlide {
   type: ResultSlideType;
@@ -909,26 +889,39 @@ function ResultScreen({ questions, statusBefore, statusAfter, onRestart, onExit 
     return [...set];
   }, [questions]);
 
-  const newWordCount = allWordIds.filter(
-    (id) => statusBefore[id] === 'unlearned' && statusAfter[id] !== 'unlearned',
-  ).length;
-  const evolvedCount = allWordIds.filter((id) => {
-    const before = STATE_RANK_GLOBAL[statusBefore[id]];
-    const after = STATE_RANK_GLOBAL[statusAfter[id]];
-    return before != null && after != null && after > before;
-  }).length;
+  // 자란 단어 — 작물 단계가 오른 단어(목마른 작물이 살아난 것 포함)
+  const RANK: Record<MemoryStatus, number> = { overdue: -1, unlearned: 0, leaf: 1, plant: 2, carrot: 3 };
+  const grownIds = allWordIds.filter((id) => {
+    const before = statusBefore[id];
+    const after = statusAfter[id];
+    return before != null && after != null && RANK[after] > RANK[before];
+  });
 
-  // 슬라이드 시퀀스 — 실서비스 흐름: newWords → memoryImproved → dailyMission → achievement → gem → result (마지막은 항상)
+  // 최고 연속 정답(콤보) — 단어 순서대로
+  const maxCombo = useMemo(() => {
+    let best = 0;
+    let run = 0;
+    questions.forEach((q) => {
+      const results = q.words ? q.words.map((w) => q.perWordCorrect?.[w.id] ?? false) : [q.isCorrect ?? false];
+      results.forEach((ok) => {
+        run = ok ? run + 1 : 0;
+        best = Math.max(best, run);
+      });
+    });
+    return best;
+  }, [questions]);
+
+  // 슬라이드 시퀀스 — 실서비스 학습 결과 보상 흐름: 밭 성장 → 콤보 → 업적 → 보석 → 결과(마지막은 항상)
   const slides = useMemo<ResultSlide[]>(() => {
     const arr: ResultSlide[] = [];
-    if (newWordCount > 0) arr.push({ type: 'newWords', data: { count: newWordCount } });
-    if (evolvedCount > 0) arr.push({ type: 'memoryImproved', data: { count: evolvedCount } });
-    arr.push({ type: 'dailyMission' });
-    arr.push({ type: 'achievement', data: { name: '단어왕', level: 1 } });
-    arr.push({ type: 'gem', data: { count: 10 } });
+    if (grownIds.length > 0) arr.push({ type: 'farmGrowth', data: { ids: grownIds } });
+    if (maxCombo >= 3) arr.push({ type: 'combo', data: { count: maxCombo } });
+    arr.push({ type: 'achievement', data: { name: '노력왕', level: 1 } });
+    arr.push({ type: 'gem', data: { count: 1 } });
     arr.push({ type: 'result' });
     return arr;
-  }, [newWordCount, evolvedCount]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [grownIds.length, maxCombo]);
 
   const [slideIdx, setSlideIdx] = useState(0);
   const current = slides[slideIdx];
@@ -979,44 +972,24 @@ function ResultScreen({ questions, statusBefore, statusAfter, onRestart, onExit 
         >
           <GlowBackground />
           <div className="relative z-[1] flex w-full flex-col items-center justify-center">
-            {current?.type === 'newWords' && (
+            {current?.type === 'farmGrowth' && (
               <IconMessageSlide
                 icon={
-                  <img
-                    src="/images/WordsStudied.png"
-                    alt="새 단어 학습"
-                    className="h-[100px] w-[100px] object-contain"
-                  />
-                }
-                highlight={<>새 단어 {current.data.count}개</>}
-                message={'를 학습했어요!'}
-              />
-            )}
-            {current?.type === 'memoryImproved' && (
-              <IconMessageSlide
-                icon={
-                  <div
-                    className="flex h-[100px] w-[100px] items-center justify-center rounded-full border-[3px]"
-                    style={{ backgroundColor: '#EBFFEE', borderColor: '#38CE38' }}
-                  >
-                    <Plant size={52} weight="fill" color="#38CE38" />
+                  <div className="flex items-end justify-center gap-[2px]">
+                    {(current.data.ids as number[]).slice(0, 4).map((id) => (
+                      <CropIcon key={id} status={statusAfter[id]} size={56} />
+                    ))}
                   </div>
                 }
-                highlight={<>{current.data.count}개</>}
-                message={'의 단어 암기 상태가 상승했어요!'}
+                highlight={<>단어 {current.data.ids.length}개</>}
+                message={'가 자랐어요'}
               />
             )}
-            {current?.type === 'dailyMission' && (
+            {current?.type === 'combo' && (
               <IconMessageSlide
-                icon={
-                  <img
-                    src="/images/DailyMissionComplete.png"
-                    alt="데일리 미션 완료"
-                    className="h-[100px] w-[100px] object-contain"
-                  />
-                }
-                highlight={<>데일리 미션</>}
-                message={'을 완료했어요!'}
+                icon={<img src="/images/combo.webp" alt="콤보" className="h-[100px] w-[100px] object-contain" />}
+                highlight={<>{current.data.count}번</>}
+                message={' 연속으로 맞혔어요'}
               />
             )}
             {current?.type === 'achievement' && (
@@ -1030,7 +1003,7 @@ function ResultScreen({ questions, statusBefore, statusAfter, onRestart, onExit 
                     />
                     {/* 캐릭터 이미지 (실서비스 동일 — WordKing.png) */}
                     <img
-                      src="/images/WordKing.png"
+                      src="/images/NoryeokKing.png"
                       alt={current.data.name}
                       className="absolute bottom-[10px] left-1/2 z-[1] h-[60px] w-[60px] -translate-x-1/2 object-contain"
                     />
@@ -1050,7 +1023,7 @@ function ResultScreen({ questions, statusBefore, statusAfter, onRestart, onExit 
                   </div>
                 }
                 highlight={<>{current.data.name} {current.data.level}레벨</>}
-                message={'을 달성했어요!'}
+                message={'을 달성했어요'}
                 delay={0.5}
               />
             )}
@@ -1064,7 +1037,7 @@ function ResultScreen({ questions, statusBefore, statusAfter, onRestart, onExit 
                   />
                 }
                 highlight={<>보석 {current.data.count}개</>}
-                message={'를 획득했어요!'}
+                message={'를 획득했어요'}
               />
             )}
           </div>
@@ -1111,7 +1084,7 @@ export default function TestPlayDemo({
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [memoryStateChange, setMemoryStateChange] = useState<MemoryStateChange | null>(null);
-  const [nextReviewDays, setNextReviewDays] = useState<number | null>(null);
+  const [xpDelta, setXpDelta] = useState<number | null>(null);
   const [userStarted, setUserStarted] = useState(false);
   const [hasEverStarted, setHasEverStarted] = useState(false);
   // 단어 기준 진행률 (0~14) — 카드 매칭은 한 단어 매칭할 때마다 +1
@@ -1181,7 +1154,7 @@ export default function TestPlayDemo({
     setIsAnswered(false);
     setIsSpeaking(false);
     setMemoryStateChange(null);
-    setNextReviewDays(null);
+    setXpDelta(null);
     if (progressIndex < totalQuestions - 1) {
       setProgressIndex((i) => i + 1);
     } else {
@@ -1192,8 +1165,18 @@ export default function TestPlayDemo({
   // multipleChoice / Listening / fillInTheBlank 정답 처리
   const handleSelect = (i: number) => {
     if (isAnswered) return;
-    const correct = cur.resultIndex === i;
     setUserSelected(i);
+    grade(cur.resultIndex === i, i);
+  };
+
+  // 빈칸 입력 · 문장 만들기 — 문제 컴포넌트가 직접 채점해 결과만 넘긴다
+  const handleOutputAnswer = (correct: boolean) => {
+    if (isAnswered) return;
+    grade(correct, undefined, 2200);
+  };
+
+  // 단일 단어 문제 공통 채점 — 진행률 +1, 작물 단계·XP 갱신, 다음 문제로
+  const grade = (correct: boolean, i: number | undefined, delayMs?: number) => {
     setIsCorrect(correct);
     setIsAnswered(true);
     if (correct) playSuccessSound(); else playErrorSound();
@@ -1214,17 +1197,17 @@ export default function TestPlayDemo({
         // 단계 변화 있으면 변경 배지 + 복습 예정일 동시 표시
         if (prevState !== newState) {
           setMemoryStateChange({ from: prevState, to: newState });
-          setNextReviewDays(NEXT_REVIEW_DAYS_BY_STATE[newState] ?? 3);
+          setXpDelta(xpDeltaOf(prevState, correct));
         } else {
           // 단계 변화 없음 → 복습 예정일만 표시 (정답/오답 무관)
           setMemoryStateChange(null);
-          setNextReviewDays(NEXT_REVIEW_DAYS_BY_STATE[newState] ?? (correct ? 3 : 1));
+          setXpDelta(xpDeltaOf(prevState, correct));
         }
         return { ...prev, [wordId]: newState };
       });
     }
     // 정답: 채점 인터랙션 보여주는 시간 확보 (1.6초), 오답: 좀 더 긴 1.8초
-    setTimeout(advanceToNext, correct ? 1600 : 1800);
+    setTimeout(advanceToNext, delayMs ?? (correct ? 1600 : 1800));
   };
 
   // cardMatch 완료 처리 — 단어별 정답 여부 dict 수신
@@ -1271,7 +1254,7 @@ export default function TestPlayDemo({
     setIsSpeaking(false);
     setIsFinished(false);
     setMemoryStateChange(null);
-    setNextReviewDays(null);
+    setXpDelta(null);
     setStatusByWord(initialStatus);
   };
 
@@ -1286,7 +1269,7 @@ export default function TestPlayDemo({
     setIsSpeaking(false);
     setIsFinished(false);
     setMemoryStateChange(null);
-    setNextReviewDays(null);
+    setXpDelta(null);
     setStatusByWord(initialStatus);
     setUserStarted(true);
     setHasEverStarted(true);
@@ -1396,7 +1379,7 @@ export default function TestPlayDemo({
                       onSpeak={handleSpeak}
                       isSpeaking={isSpeaking}
                       memoryStateChange={memoryStateChange}
-                      nextReviewDays={nextReviewDays}
+                      xpDelta={xpDelta}
                     />
                   )}
                   {cur.questionType === 'fillInTheBlank' && (
@@ -1407,7 +1390,21 @@ export default function TestPlayDemo({
                       isAnswered={isAnswered}
                       onSelect={handleSelect}
                       memoryStateChange={memoryStateChange}
-                      nextReviewDays={nextReviewDays}
+                      xpDelta={xpDelta}
+                    />
+                  )}
+                  {cur.questionType === 'fillInTheBlankTyping' && cur.word && (
+                    <FillTypingView
+                      word={cur.word}
+                      onAnswer={handleOutputAnswer}
+                      feedback={isAnswered ? <AnswerFeedback change={memoryStateChange} delta={xpDelta} /> : null}
+                    />
+                  )}
+                  {cur.questionType === 'sentenceArrange' && cur.word && (
+                    <SentenceArrangeView
+                      word={cur.word}
+                      onAnswer={handleOutputAnswer}
+                      feedback={isAnswered ? <AnswerFeedback change={memoryStateChange} delta={xpDelta} /> : null}
                     />
                   )}
                   {(cur.questionType === 'cardMatch' || cur.questionType === 'cardMatchListening') && (
@@ -1428,7 +1425,7 @@ export default function TestPlayDemo({
       </div>
 
       <p className="mt-4 text-center text-caption text-mute">
-        선택지를 눌러 정답을 맞춰보세요. 5가지 문제 유형이 섞여 14문제 출제됩니다.
+        선택지를 누르거나 직접 입력해 보세요. 여러 문제 유형이 섞여 {TOTAL_WORDS}단어를 복습합니다.
       </p>
     </div>
   );

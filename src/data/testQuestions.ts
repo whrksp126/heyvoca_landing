@@ -1,5 +1,5 @@
-// AI 추천 테스트 데모용 14문제 생성기 — 실서비스 takeTest/Main.jsx + question plugins 기반
-// 5가지 문제 유형 혼합: multipleChoice / multipleChoiceListening / fillInTheBlank / cardMatch / cardMatchListening
+// 복습 테스트 데모용 문제 생성기 — 실서비스 takeTest/Main.jsx + question plugins 기반
+// 문제 유형 혼합: 사지선다 / 듣기 / 빈칸 채우기 / 빈칸 입력 / 문장 만들기 / 카드 맞추기
 
 import { demoWords, type DemoWord, type MemoryStatus } from './demoWords';
 
@@ -7,6 +7,8 @@ export type QuestionType =
   | 'multipleChoice'
   | 'multipleChoiceListening'
   | 'fillInTheBlank'
+  | 'fillInTheBlankTyping'
+  | 'sentenceArrange'
   | 'cardMatch'
   | 'cardMatchListening';
 
@@ -61,46 +63,35 @@ function buildOptionsFor(targetWord: DemoWord, pool: DemoWord[]): { options: Opt
   return { options, resultIndex };
 }
 
-/** 데모 테스트 세트 생성 — 총 14단어 사용
- *   multipleChoice × 2  (2단어)
- *   multipleChoiceListening × 2  (2단어)
- *   fillInTheBlank × 2  (2단어)
- *   cardMatch × 1  (4단어)
- *   cardMatchListening × 1  (4단어)
- *   합계: 6 문제 / 14 단어
- *   진행률은 단어 기준으로 카운트 (카드 매칭 1개 매칭 = 1단어 진행)
+/** 데모 테스트 세트 생성 — 총 12단어 사용
+ *   multipleChoice × 2 · multipleChoiceListening × 2 · fillInTheBlank × 2
+ *   fillInTheBlankTyping × 1 · sentenceArrange × 1 · cardMatch × 1 (4단어)
+ *   진행률은 단어 기준으로 카운트 (카드 맞추기 1쌍 = 1단어 진행)
+ *   문장 만들기는 조각이 너무 많지 않게 짧은 예문 단어로, 입력 문제는 철자가 짧은 단어로 고른다.
  */
 export function buildTestQuestions(): TestQuestion[] {
   const pool = [...demoWords];
-  const shuffled = shuffle(pool); // 14개 단어 셔플
+  const wordCount = (w: DemoWord) => w.example.en.split(/\s+/).length;
+  // 문장 만들기 · 빈칸 입력 대상 먼저 고정
+  const arrange = shuffle(pool.filter((w) => wordCount(w) <= 7))[0];
+  const typing = shuffle(pool.filter((w) => w !== arrange && w.word.length <= 8))[0];
+  const rest = shuffle(pool.filter((w) => w !== arrange && w !== typing));
   const questions: TestQuestion[] = [];
 
-  // 1) multipleChoice × 2 (단어 0,1)
-  for (let i = 0; i < 2; i++) {
-    const word = shuffled[i];
+  const single = (type: QuestionType, word: DemoWord) => {
     const { options, resultIndex } = buildOptionsFor(word, pool);
-    questions.push({ questionType: 'multipleChoice', word, options, resultIndex });
-  }
+    questions.push({ questionType: type, word, options, resultIndex });
+  };
 
-  // 2) multipleChoiceListening × 2 (단어 2,3)
-  for (let i = 2; i < 4; i++) {
-    const word = shuffled[i];
-    const { options, resultIndex } = buildOptionsFor(word, pool);
-    questions.push({ questionType: 'multipleChoiceListening', word, options, resultIndex });
-  }
-
-  // 3) fillInTheBlank × 2 (단어 4,5)
-  for (let i = 4; i < 6; i++) {
-    const word = shuffled[i];
-    const { options, resultIndex } = buildOptionsFor(word, pool);
-    questions.push({ questionType: 'fillInTheBlank', word, options, resultIndex });
-  }
-
-  // 4) cardMatch × 1 (단어 6~9, 4단어)
-  questions.push({ questionType: 'cardMatch', words: shuffled.slice(6, 10) });
-
-  // 5) cardMatchListening × 1 (단어 10~13, 4단어)
-  questions.push({ questionType: 'cardMatchListening', words: shuffled.slice(10, 14) });
+  single('multipleChoice', rest[0]);
+  single('multipleChoiceListening', rest[1]);
+  single('fillInTheBlank', rest[2]);
+  questions.push({ questionType: 'fillInTheBlankTyping', word: typing });
+  single('multipleChoice', rest[3]);
+  single('fillInTheBlank', rest[4]);
+  questions.push({ questionType: 'sentenceArrange', word: arrange });
+  single('multipleChoiceListening', rest[5]);
+  questions.push({ questionType: 'cardMatch', words: rest.slice(6, 10) });
 
   return questions;
 }
@@ -113,5 +104,5 @@ export function wordCountOf(q: TestQuestion): number {
   return q.word ? 1 : 0;
 }
 
-/** 전체 단어 수 (보통 14) */
-export const TOTAL_WORDS = 14;
+/** 전체 단어 수 */
+export const TOTAL_WORDS = 12;
