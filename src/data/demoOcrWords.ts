@@ -1,5 +1,5 @@
 // OCR 시뮬레이션용 데이터 — 단일 소스에서 책 페이지 본문과 인식 박스 좌표를 함께 도출.
-// 5개 타깃 단어(demoWords.ts와 동일)가 본문에 자연스럽게 등장하며, 박스 좌표는 줄/열 index 기반으로 자동 계산.
+// 5개 타깃 단어(옛 학습 데모와 같은 단어)가 본문에 자연스럽게 등장하며, 박스 좌표는 줄/열 index 기반으로 자동 계산.
 
 export interface OcrBoxRect {
   x: number;
@@ -60,7 +60,7 @@ function findWordRect(word: string): OcrBoxRect | null {
   return null;
 }
 
-// 타깃 단어 5개 — demoWords.ts 와 동일한 단어 사용
+// 타깃 단어 5개 — 옛 학습 데모와 같은 단어 사용
 const TARGETS: Array<Omit<DemoOcrWord, 'rect'>> = [
   {
     word: 'serendipity',

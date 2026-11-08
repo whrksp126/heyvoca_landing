@@ -1,14 +1,14 @@
 ---
 // 지금의 헤이보카 — 정량 지표 4종.
-// dictWordCount, dictExampleCount는 src/data/dictionaryStats.ts에서 import.
-import { dictWordCount, dictExampleCount, bookstoreBookCount, cumulativeUsers } from '../data/dictionaryStats';
+// 수치는 src/data/dictionaryStats.ts 에서 import (사전 dump 실측, 수동 갱신).
+import { dictWordCount, dictExampleCount, bookstoreBookCount, jaDictWordCount } from '../data/dictionaryStats';
 import CountUpNumber from './demo/CountUpNumber.tsx';
 
 const stats = [
-  { value: dictWordCount, label: '사전 단어 개수' },
-  { value: bookstoreBookCount, label: '서점 단어장 개수' },
+  { value: dictWordCount, label: '영한 사전 단어' },
   { value: dictExampleCount, label: '예문 (자체 사전)' },
-  { value: cumulativeUsers, label: '누적 서비스 사용자' },
+  { value: jaDictWordCount, label: '일본어 단어' },
+  { value: bookstoreBookCount, label: '서점 단어장 (영어·일본어)' },
 ];
 ---
 

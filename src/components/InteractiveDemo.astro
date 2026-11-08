@@ -1,5 +1,30 @@
 ---
-import StudyCardDemo from './demo/StudyCardDemo.tsx';
+// 학습 흐름 — 실제 앱 녹화 영상(public/videos). 탭으로 영상 전환.
+import AppVideoShowcase from './demo/AppVideoShowcase.tsx';
+
+const clips = [
+  {
+    id: 'plant-session',
+    label: '새 씨앗 심기',
+    caption: '만나기 카드로 단어를 보고, 여러 문제로 익힌 뒤 밭에 심어요.',
+    src: '/videos/plant-session.mp4',
+    poster: '/videos/plant-session-poster.jpg',
+  },
+  {
+    id: 'sentence-arrange',
+    label: '문장 조립',
+    caption: '흩어진 단어를 순서대로 눌러 예문을 완성해요.',
+    src: '/videos/sentence-arrange.mp4',
+    poster: '/videos/sentence-arrange-poster.jpg',
+  },
+  {
+    id: 'script-trace',
+    label: '글자 따라 쓰기',
+    caption: '획순 시범을 본 뒤 손가락으로 따라 써요. (실험실 기능)',
+    src: '/videos/script-trace.mp4',
+    poster: '/videos/script-trace-poster.jpg',
+  },
+];
 ---
 
 <section id="demo" class="section bg-white" aria-labelledby="demo-h2">
@@ -7,23 +32,26 @@ import StudyCardDemo from './demo/StudyCardDemo.tsx';
     <div data-reveal>
       <span class="eyebrow">
         <span class="h-1.5 w-1.5 rounded-full bg-primary-500"></span>
-        한 번 해보세요
+        학습 흐름
       </span>
       <h2
         id="demo-h2"
         class="mt-6 text-balance text-[36px] font-bold leading-[1.12] tracking-tight text-ink md:text-display-lg lg:text-display-xl"
       >
-        실제 앱 학습 흐름을<br />
-        미리 체험해 보세요.
+        새 단어는 씨앗으로,<br />
+        익히면 밭에 심어요.
       </h2>
       <p class="mt-6 max-w-prose text-body-lg text-sub text-pretty">
-        카드를 넘기며 단어를 익혀보세요. 자동 진행 또는 이전·다음으로 카드를 넘기며 단어가 단계별로 진화하는 모습을 확인해 보세요.
-        스와이프 · 키보드 ← / → 도 가능합니다.
+        새 단어는 '새 씨앗 심기'에서 만나기 → 고르기 → 쓰기 → 문장 조립 순서로 익히고 밭에 심어요.
+        한 번에 외우라고 하지 않고, 보고 · 고르고 · 직접 써보며 손에 붙게 합니다.
+      </p>
+      <p class="mt-4 max-w-prose text-body text-mute text-pretty">
+        아래 영상은 실제 앱 화면을 그대로 녹화한 것입니다.
       </p>
     </div>
 
-    <div class="mx-auto w-full max-w-[420px]" data-reveal>
-      <StudyCardDemo client:visible />
+    <div data-reveal>
+      <AppVideoShowcase clips={clips} ariaLabel="학습 흐름 영상" client:visible />
     </div>
   </div>
 </section>
