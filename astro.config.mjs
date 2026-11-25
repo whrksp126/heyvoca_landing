@@ -12,6 +12,6 @@ export default defineConfig({
   integrations: [
     tailwind({ applyBaseStyles: false }),
     react(),
-    sitemap(),
+    sitemap({ filter: (page) => !page.endsWith('/go') && !page.endsWith('/go/') }),
   ],
 });

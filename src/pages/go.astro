@@ -1,0 +1,47 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { APPSTORE_URL, PLAYSTORE_URL } from '../data/storeLinks';
+
+// 유튜브 등 외부 영상용 스마트 링크: /go?c=<캠페인>
+---
+
+<BaseLayout title="헤이보카로 이동 중" path="/go" noIndex={true}>
+  <main class="flex min-h-screen flex-col items-center justify-center gap-5 px-6 text-center">
+    <img src="/images/logo_h.svg" alt="Hey, Voca!" width="106" height="25" class="h-[28px] w-auto select-none" />
+    <p class="text-body-lg text-sub">헤이보카로 이동 중…</p>
+    <noscript><a href="/" class="btn-primary">헤이보카 바로가기</a></noscript>
+  </main>
+  <script is:inline define:vars={{ APPSTORE_URL, PLAYSTORE_URL }}>
+    (function () {
+      var raw = new URLSearchParams(location.search).get('c') || '';
+      var c = raw.replace(/[^A-Za-z0-9_-]/g, '') || 'youtube';
+      var ua = navigator.userAgent || '';
+      var isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      var isAndroid = /Android/.test(ua);
+      var os = isIOS ? 'ios' : isAndroid ? 'android' : 'other';
+      var url;
+      if (isAndroid) {
+        url = PLAYSTORE_URL + '&referrer=' + encodeURIComponent('utm_source=youtube&utm_medium=video&utm_campaign=' + c);
+      } else if (isIOS) {
+        var u = new URL(APPSTORE_URL);
+        u.searchParams.set('ct', c.slice(0, 40));
+        u.searchParams.set('mt', '8');
+        url = u.toString();
+      } else {
+        url = '/?utm_source=youtube&utm_medium=video&utm_campaign=' + encodeURIComponent(c);
+      }
+      var done = false;
+      function go() { if (done) return; done = true; location.replace(url); }
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', 'go_click', {
+          campaign: c,
+          os: os,
+          transport_type: 'beacon',
+          event_callback: go,
+          event_timeout: 300,
+        });
+      }
+      setTimeout(go, 300);
+    })();
+  </script>
+</BaseLayout>
