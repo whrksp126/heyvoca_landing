@@ -27,6 +27,8 @@ import { APPSTORE_URL, PLAYSTORE_URL } from '../data/storeLinks';
     <div class="flex items-center gap-2">
       <a
         href={APPSTORE_URL}
+        data-store="app_store"
+        data-location="header"
         target="_blank"
         rel="noopener"
         aria-label="App Store에서 받기"
@@ -36,6 +38,8 @@ import { APPSTORE_URL, PLAYSTORE_URL } from '../data/storeLinks';
       </a>
       <a
         href={PLAYSTORE_URL}
+        data-store="play_store"
+        data-location="header"
         target="_blank"
         rel="noopener"
         aria-label="Google Play에서 받기"
@@ -65,8 +69,12 @@ import { APPSTORE_URL, PLAYSTORE_URL } from '../data/storeLinks';
     const isAndroid = /Android/.test(ua);
     if (isIOS) {
       btn.setAttribute('href', btn.dataset.appstore);
+      btn.setAttribute('data-store', 'app_store');
+      btn.setAttribute('data-location', 'header_get_app');
     } else if (isAndroid) {
       btn.setAttribute('href', btn.dataset.playstore);
+      btn.setAttribute('data-store', 'play_store');
+      btn.setAttribute('data-location', 'header_get_app');
     }
   }
 </script>

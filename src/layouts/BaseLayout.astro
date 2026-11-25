@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { GA_MEASUREMENT_ID } from '../config/analytics';
 
 interface Props {
   title: string;
@@ -115,6 +116,35 @@ const websiteJsonLd = {
       href="/fonts/Cafe24Ssurround-v2.0.woff2"
       crossorigin
     />
+
+    {GA_MEASUREMENT_ID && (
+      <>
+        <script is:inline define:vars={{ GA_MEASUREMENT_ID }}>
+          if (!['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) {
+            var s = document.createElement('script');
+            s.async = true;
+            s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_MEASUREMENT_ID;
+            document.head.appendChild(s);
+            window.dataLayer = window.dataLayer || [];
+            window.gtag = function () { window.dataLayer.push(arguments); };
+            window.gtag('js', new Date());
+            window.gtag('config', GA_MEASUREMENT_ID);
+          }
+        </script>
+        <script is:inline>
+          // data-store(app_store|play_store|web) + data-location 이 붙은 링크 클릭 → store_click
+          document.addEventListener('click', function (e) {
+            var a = e.target instanceof Element ? e.target.closest('a[data-store]') : null;
+            if (!a || typeof window.gtag !== 'function') return;
+            window.gtag('event', 'store_click', {
+              store: a.getAttribute('data-store'),
+              location: a.getAttribute('data-location') || 'unknown',
+              transport_type: 'beacon',
+            });
+          });
+        </script>
+      </>
+    )}
 
     <script type="application/ld+json" set:html={JSON.stringify(orgJsonLd)}></script>
     <script type="application/ld+json" set:html={JSON.stringify(appJsonLd)}></script>
