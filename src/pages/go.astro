@@ -8,7 +8,15 @@ import { APPSTORE_URL, PLAYSTORE_URL } from '../data/storeLinks';
 <BaseLayout title="헤이보카로 이동 중" path="/go" noIndex={true}>
   <main class="flex min-h-screen flex-col items-center justify-center gap-5 px-6 text-center">
     <img src="/images/logo_h.svg" alt="Hey, Voca!" width="106" height="25" class="h-[28px] w-auto select-none" />
-    <p class="text-body-lg text-sub">헤이보카로 이동 중…</p>
+    <p id="go-loading" class="text-body-lg text-sub">헤이보카로 이동 중…</p>
+    <div id="go-unsupported" class="hidden max-w-sm flex-col items-center gap-3">
+      <svg width="40" height="40" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" class="text-primary-500">
+        <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm-8-80V80a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,172Z"></path>
+      </svg>
+      <p class="text-body-lg font-semibold text-ink">헤이보카는 Android 7.1 이상에서 사용할 수 있어요.</p>
+      <p class="text-body-lg text-sub">사용 중인 기기(<span id="go-android-ver">Android</span>)는 지원하지 않아요.</p>
+      <a href="/" class="btn-primary mt-2">헤이보카 둘러보기</a>
+    </div>
     <noscript><a href="/" class="btn-primary">헤이보카 바로가기</a></noscript>
   </main>
   <script is:inline define:vars={{ APPSTORE_URL, PLAYSTORE_URL }}>
@@ -19,6 +27,23 @@ import { APPSTORE_URL, PLAYSTORE_URL } from '../data/storeLinks';
       var isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
       var isAndroid = /Android/.test(ua);
       var os = isIOS ? 'ios' : isAndroid ? 'android' : 'other';
+      if (isAndroid) {
+        var m = ua.match(/Android\s+(\d+)(?:\.(\d+))?/);
+        if (m) {
+          var maj = parseInt(m[1], 10), min = m[2] ? parseInt(m[2], 10) : 0;
+          if (maj < 7 || (maj === 7 && min < 1)) {
+            document.getElementById('go-loading').classList.add('hidden');
+            document.getElementById('go-android-ver').textContent = 'Android ' + m[1] + (m[2] ? '.' + m[2] : '');
+            var box = document.getElementById('go-unsupported');
+            box.classList.remove('hidden');
+            box.classList.add('flex');
+            if (typeof window.gtag === 'function') {
+              window.gtag('event', 'go_unsupported', { campaign: c, os: os, transport_type: 'beacon' });
+            }
+            return;
+          }
+        }
+      }
       var url;
       if (isAndroid) {
         url = PLAYSTORE_URL + '&referrer=' + encodeURIComponent('utm_source=youtube&utm_medium=video&utm_campaign=' + c);
